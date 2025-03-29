@@ -84,16 +84,11 @@ export default function Home() {
           <ContactSection />
         </main>
         
-        {/* Panier à droite (visible uniquement sur les grands écrans) */}
-        <div className="hidden lg:block w-80 xl:w-96 bg-white shadow-lg sticky top-24 h-screen p-4 overflow-auto">
-          <div className="p-4 rounded-lg bg-gray-50 shadow-inner h-full">
-            <h3 className="font-playfair text-xl font-bold mb-4 text-primary border-b pb-2">{t('cart.title')}</h3>
-            {items.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
-                <p>{t('cart.empty')}</p>
-                <p className="text-sm mt-2">{t('cart.addItems')}</p>
-              </div>
-            ) : (
+        {/* Panier à droite (visible uniquement sur les grands écrans et quand il y a des produits) */}
+        {items.length > 0 && (
+          <aside className="hidden lg:block w-80 xl:w-96 bg-white shadow-lg sticky top-24 h-screen p-4 overflow-auto">
+            <div className="p-4 rounded-lg bg-gray-50 shadow-inner h-full">
+              <h3 className="font-playfair text-xl font-bold mb-4 text-primary border-b pb-2">{t('cart.title')}</h3>
               <div className="space-y-4">
                 {items.map(item => (
                   <div key={item.id} className="flex gap-3 border-b pb-3">
@@ -156,9 +151,9 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </aside>
+        )}
       </div>
       
       <Footer onNavClick={scrollToSection} />

@@ -1,27 +1,43 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
+  loginWithSSO: () => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  userData: UserData | null;
+}
+
+interface UserData {
+  id: number;
+  username: string;
+  email?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   // Check if user is authenticated on page load
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         const response = await fetch('/api/auth/status');
-        const authenticated = response.ok && await response.json();
-        setIsAuthenticated(authenticated.isAuthenticated);
+        const data = response.ok && await response.json();
+        setIsAuthenticated(data.isAuthenticated);
+        
+        if (data.isAuthenticated && data.user) {
+          setUserData(data.user);
+        }
       } catch (error) {
         setIsAuthenticated(false);
+        setUserData(null);
       } finally {
         setIsLoading(false);
       }
@@ -41,12 +57,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (response.ok) {
+        const userData = await response.json();
         setIsAuthenticated(true);
+        setUserData(userData);
         return true;
       }
       return false;
     } catch (error) {
+      toast({
+        title: "Erreur de connexion",
+        description: "Impossible de se connecter. Veuillez réessayer.",
+        variant: "destructive",
+      });
       return false;
+    }
+  };
+
+  const loginWithSSO = async (): Promise<void> => {
+    try {
+      // Redirect to the SSO authentication endpoint
+      const ssoAuthUrl = '/api/auth/sso';
+      
+      // Store the current URL to redirect back after auth
+      localStorage.setItem('redirectAfterAuth', window.location.pathname);
+      
+      // Redirect to the SSO authentication endpoint
+      window.location.href = ssoAuthUrl;
+    } catch (error) {
+      toast({
+        title: "Erreur SSO",
+        description: "Impossible de se connecter via SSO. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -55,11 +97,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await fetch('/api/auth/logout', { method: 'POST' });
     } finally {
       setIsAuthenticated(false);
+      setUserData(null);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, loginWithSSO, logout, isLoading, userData }}>
       {children}
     </AuthContext.Provider>
   );

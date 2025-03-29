@@ -18,6 +18,7 @@ declare module 'express-session' {
   interface SessionData {
     userId: number;
     username: string;
+    ssoState?: string;
   }
 }
 
@@ -358,11 +359,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  app.get("/api/auth/status", (req, res) => {
+  app.get("/api/auth/status", async (req, res) => {
     if (req.session && req.session.userId) {
+      // Récupérer les informations de l'utilisateur
+      const user = await storage.getUser(req.session.userId);
+      if (user) {
+        return res.json({ 
+          isAuthenticated: true, 
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email
+          } 
+        });
+      }
       return res.json({ isAuthenticated: true });
     }
     res.json({ isAuthenticated: false });
+  });
+  
+  // Route de redirection SSO
+  app.get("/api/auth/sso", (req, res) => {
+    // Dans un vrai système SSO, cette route redirigerait vers le service d'authentification
+    // Les paramètres importants seraient :
+    // - client_id : identifiant de votre application auprès du service SSO
+    // - redirect_uri : URL de callback pour revenir à votre application après authentification
+    // - response_type : généralement "code" pour une authentification via code d'autorisation
+    // - scope : les permissions demandées (ex: "openid profile email")
+    // - state : un jeton aléatoire pour prévenir les attaques CSRF
+    
+    // Exemple de redirection SSO (simulée)
+    const clientId = process.env.SSO_CLIENT_ID || 'abou-hilal-client';
+    const redirectUri = encodeURIComponent(`${req.protocol}://${req.get('host')}/api/auth/sso/callback`);
+    const state = Math.random().toString(36).substring(2);
+    // Stocker le state dans la session pour vérification ultérieure
+    req.session.ssoState = state;
+    
+    // Dans une implémentation réelle, rediriger vers le service SSO
+    // res.redirect(`https://sso-provider.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid profile email&state=${state}`);
+    
+    // Pour la simulation, on va simplement rediriger vers la page de callback avec un code simulé
+    res.redirect(`/api/auth/sso/callback?code=demo_sso_code&state=${state}`);
+  });
+  
+  // Route de callback SSO
+  app.get("/api/auth/sso/callback", async (req, res) => {
+    const { code, state } = req.query;
+    
+    // Vérifier le state pour prévenir les attaques CSRF
+    if (!state || state !== req.session.ssoState) {
+      return res.status(400).send('État invalide, possible tentative d\'attaque CSRF');
+    }
+    
+    try {
+      // Dans un vrai système SSO, échanger le code d'autorisation contre un token
+      // const tokenResponse = await fetch('https://sso-provider.com/token', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      //   body: new URLSearchParams({
+      //     grant_type: 'authorization_code',
+      //     code: code as string,
+      //     redirect_uri: `${req.protocol}://${req.get('host')}/api/auth/sso/callback`,
+      //     client_id: process.env.SSO_CLIENT_ID,
+      //     client_secret: process.env.SSO_CLIENT_SECRET
+      //   })
+      // });
+      // const tokenData = await tokenResponse.json();
+      
+      // Puis récupérer les infos utilisateur avec le token d'accès
+      // const userResponse = await fetch('https://sso-provider.com/userinfo', {
+      //   headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+      // });
+      // const userData = await userResponse.json();
+      
+      // Pour la démonstration, on va simuler les données utilisateur
+      const userData = {
+        sub: 'sso_123',
+        email: 'sso_user@example.com',
+        name: 'SSO User'
+      };
+      
+      // Vérifier si l'utilisateur existe déjà
+      let user = await storage.getUserByUsername(userData.sub);
+      
+      if (!user) {
+        // Créer l'utilisateur s'il n'existe pas
+        user = await storage.createUser({
+          username: userData.sub,
+          email: userData.email,
+          password: await hashPassword(Math.random().toString(36)) // Mot de passe aléatoire non utilisé en SSO
+        });
+      }
+      
+      // Établir la session
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      
+      // Rediriger vers la page précédente ou la page d'accueil
+      const redirectTo = '/'; // Page par défaut
+      res.redirect(redirectTo);
+      
+    } catch (error) {
+      console.error('Erreur lors de l\'authentification SSO:', error);
+      res.status(500).send('Erreur lors de l\'authentification SSO');
+    }
   });
   
 
