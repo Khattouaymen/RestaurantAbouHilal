@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, ReactNode } from 'react';
+import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { CartItem } from '@/lib/types';
 
 interface CartContextType {
@@ -12,10 +12,31 @@ interface CartContextType {
   calculateTotal: (taxRate: number, deliveryFee: number) => number;
 }
 
+const CART_STORAGE_KEY = 'abou-hilal-cart';
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  // Initialize state from localStorage or empty array
+  const [items, setItems] = useState<CartItem[]>(() => {
+    if (typeof window === 'undefined') return [];
+    
+    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (savedCart) {
+      try {
+        return JSON.parse(savedCart);
+      } catch (error) {
+        console.error('Failed to parse cart from localStorage:', error);
+        return [];
+      }
+    }
+    return [];
+  });
+
+  // Save to localStorage whenever cart changes
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
 
   // Add item to cart
   const addItem = (newItem: CartItem) => {
@@ -52,6 +73,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Clear cart
   const clearCart = () => {
     setItems([]);
+    localStorage.removeItem(CART_STORAGE_KEY);
   };
 
   // Calculate subtotal

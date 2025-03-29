@@ -13,6 +13,7 @@ export default function FullMenu() {
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [, setLocation] = useLocation();
+  const [isCartVisible, setIsCartVisible] = useState(false);
   const { addItem } = useCart();
   
   // Fetch categories
@@ -73,7 +74,11 @@ export default function FullMenu() {
             </Button>
           </Link>
           <h1 className="font-playfair text-2xl font-bold">Menu Complet</h1>
-          <Button variant="ghost" className="relative">
+          <Button 
+            variant="ghost" 
+            className="relative"
+            onClick={() => setIsCartVisible(!isCartVisible)}
+          >
             <ShoppingCart size={20} />
             {hasItems && (
               <span className="absolute -top-2 -right-2 bg-primary text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
@@ -86,8 +91,8 @@ export default function FullMenu() {
       
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Menu content - Takes 2/3 of the space on desktop */}
-          <div className="w-full lg:w-2/3">
+          {/* Menu content - Takes full width when cart is hidden, 2/3 when visible */}
+          <div className={`w-full ${isCartVisible ? 'lg:w-2/3' : 'lg:w-full'}`}>
             {/* Category tabs */}
             <Tabs defaultValue="all" onValueChange={setActiveCategory} className="mb-8">
               <TabsList className="mb-4 flex flex-nowrap overflow-x-auto pb-2 px-2 justify-start">
@@ -151,95 +156,97 @@ export default function FullMenu() {
             </Tabs>
           </div>
           
-          {/* Cart sidebar - Takes 1/3 of the space on desktop */}
-          <div className="w-full lg:w-1/3 sticky top-20 h-fit">
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="font-playfair text-xl font-bold mb-4 flex items-center">
-                <ShoppingCart className="mr-2" size={20} />
-                Votre Panier
-              </h2>
-              
-              {hasItems ? (
-                <>
-                  <div className="space-y-4 max-h-[400px] overflow-y-auto mb-4">
-                    {items.map((item) => (
-                      <div key={item.id} className="flex gap-3 border-b pb-3">
-                        <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-grow">
-                          <div className="flex justify-between items-start">
-                            <p className="font-medium">{item.name}</p>
-                            <p className="font-bold text-primary">{(item.price * item.quantity).toFixed(2)} Dhs</p>
+          {/* Cart sidebar - Only visible when isCartVisible is true */}
+          {isCartVisible && (
+            <div className="w-full lg:w-1/3 sticky top-20 h-fit">
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="font-playfair text-xl font-bold mb-4 flex items-center">
+                  <ShoppingCart className="mr-2" size={20} />
+                  Votre Panier
+                </h2>
+                
+                {hasItems ? (
+                  <>
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto mb-4">
+                      {items.map((item) => (
+                        <div key={item.id} className="flex gap-3 border-b pb-3">
+                          <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                           </div>
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex-grow">
+                            <div className="flex justify-between items-start">
+                              <p className="font-medium">{item.name}</p>
+                              <p className="font-bold text-primary">{(item.price * item.quantity).toFixed(2)} Dhs</p>
+                            </div>
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-2">
+                                <Button 
+                                  size="icon" 
+                                  variant="outline" 
+                                  className="h-7 w-7" 
+                                  onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                                >
+                                  -
+                                </Button>
+                                <span className="w-8 text-center">{item.quantity}</span>
+                                <Button 
+                                  size="icon" 
+                                  variant="outline" 
+                                  className="h-7 w-7" 
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                >
+                                  +
+                                </Button>
+                              </div>
                               <Button 
-                                size="icon" 
-                                variant="outline" 
-                                className="h-7 w-7" 
-                                onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                                variant="ghost" 
+                                className="h-7 w-7 p-0 text-red-500" 
+                                onClick={() => removeItem(item.id)}
                               >
-                                -
-                              </Button>
-                              <span className="w-8 text-center">{item.quantity}</span>
-                              <Button 
-                                size="icon" 
-                                variant="outline" 
-                                className="h-7 w-7" 
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              >
-                                +
+                                ×
                               </Button>
                             </div>
-                            <Button 
-                              variant="ghost" 
-                              className="h-7 w-7 p-0 text-red-500" 
-                              onClick={() => removeItem(item.id)}
-                            >
-                              ×
-                            </Button>
                           </div>
                         </div>
+                      ))}
+                    </div>
+                    
+                    <div className="space-y-2 border-t pt-4">
+                      <div className="flex justify-between">
+                        <span>Sous-total</span>
+                        <span>{calculateSubtotal().toFixed(2)} Dhs</span>
                       </div>
-                    ))}
-                  </div>
-                  
-                  <div className="space-y-2 border-t pt-4">
-                    <div className="flex justify-between">
-                      <span>Sous-total</span>
-                      <span>{calculateSubtotal().toFixed(2)} Dhs</span>
+                      <div className="flex justify-between">
+                        <span>Livraison</span>
+                        <span>20.00 Dhs</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                        <span>Total</span>
+                        <span>{calculateTotal(0, 20).toFixed(2)} Dhs</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Livraison</span>
-                      <span>20.00 Dhs</span>
+                    
+                    <div className="mt-4 space-y-2">
+                      <Button className="w-full" size="lg" onClick={() => setLocation('/#order')}>
+                        Commander
+                      </Button>
+                      <Button variant="outline" className="w-full" size="sm" onClick={clearCart}>
+                        Vider le panier
+                      </Button>
                     </div>
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                      <span>Total</span>
-                      <span>{calculateTotal(0, 20).toFixed(2)} Dhs</span>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="flex justify-center mb-4">
+                      <ShoppingCart size={48} className="text-gray-300" />
                     </div>
+                    <p>Votre panier est vide</p>
+                    <p className="text-sm mt-2">Ajoutez des plats pour commencer votre commande</p>
                   </div>
-                  
-                  <div className="mt-4 space-y-2">
-                    <Button className="w-full" size="lg" onClick={() => setLocation('/#order')}>
-                      Commander
-                    </Button>
-                    <Button variant="outline" className="w-full" size="sm" onClick={clearCart}>
-                      Vider le panier
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="flex justify-center mb-4">
-                    <ShoppingCart size={48} className="text-gray-300" />
-                  </div>
-                  <p>Votre panier est vide</p>
-                  <p className="text-sm mt-2">Ajoutez des plats pour commencer votre commande</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

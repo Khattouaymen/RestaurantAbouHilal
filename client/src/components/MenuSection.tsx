@@ -19,6 +19,18 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
   const { addItem } = useCart();
   const { toast } = useToast();
   const sectionRef = useRef<HTMLElement>(null);
+  
+  // Définir un type spécifique pour l'élément de menu qui peut avoir price comme string ou number
+  type MenuItemWithVariablePrice = {
+    id: number;
+    name: string;
+    description: string;
+    image: string;
+    categoryId: number;
+    featured: number | null;
+    tags: string;
+    price: string | number;
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -52,8 +64,9 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
       ];
 
   // If no data is available yet, show fallback menu items
+  // Cast MenuItems to our MenuItemWithVariablePrice type for safe handling of price property
   const displayedMenuItems = menuItems.length > 0 
-    ? menuItems.filter(item => selectedCategory === 'all' || item.categoryId.toString() === selectedCategory)
+    ? menuItems.filter(item => selectedCategory === 'all' || item.categoryId.toString() === selectedCategory) as unknown as MenuItemWithVariablePrice[]
     : [
         {
           id: 1,
@@ -117,18 +130,21 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
         }
       ];
 
-  const handleAddToOrder = (item: MenuItem) => {
+  const handleAddToOrder = (item: MenuItemWithVariablePrice) => {
+    // Assurez-vous que le prix est un nombre
+    const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
+    
     addItem({
       id: item.id,
       name: item.name,
-      price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+      price,
       quantity: 1,
       image: item.image
     });
 
     toast({
-      title: "Added to order",
-      description: `${item.name} has been added to your order.`,
+      title: "Ajouté au panier",
+      description: `${item.name} a été ajouté à votre commande.`,
       duration: 3000,
     });
   };
