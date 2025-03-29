@@ -56,7 +56,11 @@ export const insertMenuItemSchema = createInsertSchema(menuItems).pick({
   tags: true,
 });
 
+// Schema for updating menu items (all fields optional)
+export const updateMenuItemSchema = insertMenuItemSchema.partial();
+
 export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
+export type UpdateMenuItem = z.infer<typeof updateMenuItemSchema>;
 export type MenuItem = typeof menuItems.$inferSelect;
 
 // Order

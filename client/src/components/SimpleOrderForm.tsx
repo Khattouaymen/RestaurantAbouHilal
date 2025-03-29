@@ -75,16 +75,16 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
-        city: '',
-        zipCode: '',
+        city: 'Casablanca',
+        zipCode: '20000',
         deliveryOption: 'standard',
         deliveryTime: 'asap',
         paymentMethod: 'cash',
-        specialInstructions: formData.notes,
-        subtotal: calculateSubtotal(),
-        deliveryFee: DELIVERY_FEE,
-        tax: calculateTax(TAX_RATE),
-        total: calculateTotal(TAX_RATE, DELIVERY_FEE),
+        specialInstructions: formData.notes || null,
+        subtotal: calculateSubtotal().toString(),
+        deliveryFee: DELIVERY_FEE.toString(),
+        tax: calculateTax(TAX_RATE).toString(),
+        total: calculateTotal(TAX_RATE, DELIVERY_FEE).toString(),
         status: 'pending', // Default status for new orders
       };
 

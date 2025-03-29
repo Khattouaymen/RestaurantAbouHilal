@@ -1,8 +1,14 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertOrderSchema, insertOrderItemSchema, insertUserSchema } from "@shared/schema";
+import { 
+  insertOrderSchema, 
+  insertOrderItemSchema, 
+  insertUserSchema,
+  updateMenuItemSchema
+} from "@shared/schema";
 import { MENU_ITEMS, MENU_CATEGORIES } from "../client/src/lib/constants";
+import { z } from "zod";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -115,6 +121,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating menu item:", error);
       res.status(500).json({ message: "Error creating menu item" });
+    }
+  });
+  
+  // Update an existing menu item (protected by auth)
+  app.put("/api/menu-items/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid menu item ID" });
+      }
+      
+      // Valider les données avec Zod
+      const updatedMenuItemData = updateMenuItemSchema.parse(req.body);
+      
+      // Vérifier si le plat existe
+      const existingMenuItem = await storage.getMenuItem(id);
+      if (!existingMenuItem) {
+        return res.status(404).json({ message: "Menu item not found" });
+      }
+      
+      // Mettre à jour le plat
+      const menuItem = await storage.updateMenuItem(id, updatedMenuItemData);
+      res.json(menuItem);
+    } catch (error) {
+      console.error("Error updating menu item:", error);
+      
+      // Vérifier si c'est une erreur de validation Zod
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ message: "Error updating menu item" });
+    }
+  });
+  
+  // Delete a menu item (protected by auth)
+  app.delete("/api/menu-items/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid menu item ID" });
+      }
+      
+      // Vérifier si le plat existe
+      const existingMenuItem = await storage.getMenuItem(id);
+      if (!existingMenuItem) {
+        return res.status(404).json({ message: "Menu item not found" });
+      }
+      
+      // Supprimer le plat
+      await storage.deleteMenuItem(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting menu item:", error);
+      res.status(500).json({ message: "Error deleting menu item" });
     }
   });
 
