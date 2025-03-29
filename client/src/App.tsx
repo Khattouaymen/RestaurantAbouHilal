@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import AdminMenu from "@/pages/AdminMenu";
 import Login from "@/pages/Login";
+import FullMenu from "@/pages/FullMenu";
 import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -15,6 +16,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/menu" component={FullMenu} />
       <Route path="/login" component={Login} />
       <Route path="/admin">
         <ProtectedRoute>

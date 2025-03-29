@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Award, Flame, Utensils, Leaf, Fish, Coffee } from 'lucide-react';
+import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import BackgroundPattern from './BackgroundPattern';
@@ -263,8 +264,8 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
         </div>
         
         <div className="text-center mt-12">
-          <a href="#" className="inline-flex items-center text-primary font-semibold hover:underline">
-            View Full Menu
+          <a href="/menu" className="inline-flex items-center text-primary font-semibold hover:underline">
+            Voir Le Menu Complet
             <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
