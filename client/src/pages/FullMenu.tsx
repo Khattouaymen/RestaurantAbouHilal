@@ -14,7 +14,7 @@ export default function FullMenu() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [, setLocation] = useLocation();
   const [isCartVisible, setIsCartVisible] = useState(false);
-  const { addItem } = useCart();
+  const { addItem, items, removeItem, updateQuantity, clearCart, calculateSubtotal, calculateCommission, calculateDeliveryFee, calculateTotal } = useCart();
   
   // Fetch categories
   const { data: categories = [] } = useQuery<Category[]>({
@@ -59,7 +59,6 @@ export default function FullMenu() {
     });
   };
   
-  const { items, removeItem, updateQuantity, clearCart, calculateSubtotal, calculateTotal } = useCart();
   const hasItems = items.length > 0;
 
   return (
@@ -217,17 +216,21 @@ export default function FullMenu() {
                         <span>{calculateSubtotal().toFixed(2)} Dhs</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Livraison</span>
-                        <span>20.00 Dhs</span>
+                        <span>Commission (7%)</span>
+                        <span>{calculateCommission().toFixed(2)} Dhs</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Livraison {calculateSubtotal() >= 80 ? '(Gratuite > 80 Dhs)' : ''}</span>
+                        <span>{calculateDeliveryFee().toFixed(2)} Dhs</span>
                       </div>
                       <div className="flex justify-between font-bold text-lg pt-2 border-t">
                         <span>Total</span>
-                        <span>{calculateTotal(0, 20).toFixed(2)} Dhs</span>
+                        <span>{calculateTotal().toFixed(2)} Dhs</span>
                       </div>
                     </div>
                     
                     <div className="mt-4 space-y-2">
-                      <Button className="w-full" size="lg" onClick={() => setLocation('/#order')}>
+                      <Button className="w-full" size="lg" onClick={() => setLocation('/')}>
                         Commander
                       </Button>
                       <Button variant="outline" className="w-full" size="sm" onClick={clearCart}>
