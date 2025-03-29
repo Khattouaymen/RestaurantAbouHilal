@@ -94,7 +94,10 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(orderData),
+        body: JSON.stringify({
+          order: orderData,
+          items: items
+        }),
       });
 
       if (!response.ok) {

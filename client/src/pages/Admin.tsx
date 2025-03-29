@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from 'wouter';
+import { LogOut } from 'lucide-react';
 
 interface OrderItem {
   id: number;
@@ -16,7 +19,8 @@ interface OrderItem {
 
 interface Order {
   id: number;
-  customerName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   address: string;
@@ -24,6 +28,9 @@ interface Order {
   specialInstructions: string | null;
   createdAt: string; // ISO date string
   items: OrderItem[];
+  
+  // Propriété calculée pour l'affichage
+  customerName?: string;
 }
 
 // Statuses de commande
@@ -178,7 +185,12 @@ export default function Admin() {
     queryKey: ['/api/orders'],
     queryFn: async () => {
       const res = await fetch('/api/orders');
-      return res.json();
+      const data = await res.json();
+      // Ajouter la propriété calculée customerName
+      return data.map((order: Order) => ({
+        ...order,
+        customerName: `${order.firstName} ${order.lastName}`
+      }));
     }
   });
 
@@ -192,10 +204,8 @@ export default function Admin() {
   });
   
   // Fonction pour mettre à jour le statut d'une commande
-  // Format le nom complet à partir de firstName et lastName
-  const formatFullName = (order: Order) => {
-    return `${order.firstName} ${order.lastName}`;
-  };
+  const { logout } = useAuth();
+  const [, setLocation] = useLocation();
 
   const handleStatusChange = async (orderId: number, status: string) => {
     try {
@@ -245,9 +255,36 @@ export default function Admin() {
     );
   }
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté avec succès.",
+      });
+      setLocation('/login');
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la déconnexion.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-6">Administration des commandes</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Administration des commandes</h1>
+        <Button 
+          variant="outline" 
+          onClick={handleLogout}
+          className="flex items-center gap-2"
+        >
+          <LogOut size={16} />
+          Déconnexion
+        </Button>
+      </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="mb-4">

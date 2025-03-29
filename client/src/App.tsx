@@ -5,13 +5,21 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
+import Login from "@/pages/Login";
 import { CartProvider } from "@/hooks/useCart";
+import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/admin" component={Admin} />
+      <Route path="/login" component={Login} />
+      <Route path="/admin">
+        <ProtectedRoute>
+          <Admin />
+        </ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -20,10 +28,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <Router />
-        <Toaster />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Router />
+          <Toaster />
+        </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

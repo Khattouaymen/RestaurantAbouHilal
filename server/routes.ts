@@ -1,12 +1,61 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertOrderSchema, insertOrderItemSchema } from "@shared/schema";
+import { insertOrderSchema, insertOrderItemSchema, insertUserSchema } from "@shared/schema";
 import { MENU_ITEMS, MENU_CATEGORIES } from "../client/src/lib/constants";
+import session from "express-session";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+// Extend express-session with our custom data
+declare module 'express-session' {
+  interface SessionData {
+    userId: number;
+    username: string;
+  }
+}
+
+const scryptAsync = promisify(scrypt);
+
+// Hash and verification functions for passwords
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+// Middleware to check if user is authenticated
+function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (req.session && req.session.userId) {
+    return next();
+  }
+  res.status(401).json({ message: "Unauthorized" });
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up session middleware
+  app.use(session({
+    secret: "ABOU-HILAL-SECRET-KEY",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+  
   // Initialize sample data
   await initializeData();
+  
+  // Ensure admin user exists
+  await ensureAdminUser();
 
   // API endpoints
   // Categories
@@ -128,8 +177,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Update order status
-  app.put("/api/orders/:id/status", async (req, res) => {
+  // Update order status (protected by auth)
+  app.put("/api/orders/:id/status", isAuthenticated, async (req, res) => {
     try {
       const orderId = parseInt(req.params.id);
       if (isNaN(orderId)) {
@@ -154,6 +203,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating order status:", error);
       res.status(500).json({ message: "Error updating order status" });
+    }
+  });
+  
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      const isPasswordValid = await comparePasswords(password, user.password);
+      
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Set session data
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      
+      res.json({ 
+        id: user.id, 
+        username: user.username 
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Error during login" });
+    }
+  });
+  
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Error during logout" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+  
+  app.get("/api/auth/status", (req, res) => {
+    if (req.session && req.session.userId) {
+      return res.json({ isAuthenticated: true });
+    }
+    res.json({ isAuthenticated: false });
+  });
+  
+  // Get all orders (protected by auth)
+  app.get("/api/orders", isAuthenticated, async (req, res) => {
+    try {
+      const orders = await storage.getAllOrders();
+      
+      // Enrichir chaque commande avec ses articles
+      const enrichedOrders = await Promise.all(orders.map(async (order) => {
+        const items = await storage.getOrderItems(order.id);
+        return {
+          ...order,
+          items
+        };
+      }));
+      
+      res.json(enrichedOrders);
+    } catch (error) {
+      console.error("Error fetching all orders:", error);
+      res.status(500).json({ message: "Error fetching orders" });
     }
   });
 
@@ -191,5 +312,28 @@ async function initializeData() {
     }
     
     console.log("Sample data initialized");
+  }
+}
+
+// Ensure admin user exists
+async function ensureAdminUser() {
+  try {
+    // Check if admin user already exists
+    const adminUser = await storage.getUserByUsername("admin");
+    
+    if (!adminUser) {
+      // Create admin user if not exists
+      const hashedPassword = await hashPassword("admin123");
+      
+      await storage.createUser({
+        username: "admin",
+        password: hashedPassword,
+        email: "admin@abou-hilal.ma"
+      });
+      
+      console.log("Admin user created");
+    }
+  } catch (error) {
+    console.error("Error ensuring admin user:", error);
   }
 }
