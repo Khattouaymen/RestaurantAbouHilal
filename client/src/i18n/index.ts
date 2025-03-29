@@ -31,7 +31,22 @@ const resources = {
         myOrder: "Ma commande",
         estimatedDelivery: "Livraison estimée",
         popularItems: "Plats populaires",
-        topSellers: "Meilleures ventes"
+        topSellers: "Meilleures ventes",
+        all: "Tous",
+        addedToOrder: "a été ajouté à votre commande",
+        ourMenu: "Notre Menu",
+        menuDescription: "Découvrez notre sélection de plats marocains authentiques, préparés avec des épices traditionnelles pour vous offrir les vraies saveurs du Maroc.",
+        viewFullMenu: "Voir le menu complet",
+        mostPopular: "Le plus populaire",
+        tags: {
+          spicy: "Épicé",
+          chefSpecial: "Spécialité du Chef",
+          traditional: "Traditionnel",
+          vegetarian: "Option Végétarienne",
+          seafood: "Fruits de mer",
+          beverage: "Boisson",
+          featured: "En vedette"
+        }
       },
       nav: {
         home: "Accueil",
@@ -90,7 +105,22 @@ const resources = {
         myOrder: "My order",
         estimatedDelivery: "Estimated delivery",
         popularItems: "Popular items",
-        topSellers: "Top sellers"
+        topSellers: "Top sellers",
+        all: "All",
+        addedToOrder: "has been added to your order",
+        ourMenu: "Our Menu",
+        menuDescription: "Discover our selection of authentic Moroccan dishes, prepared with traditional spices to bring the true flavors of Morocco to your table.",
+        viewFullMenu: "View full menu",
+        mostPopular: "Most Popular",
+        tags: {
+          spicy: "Spicy",
+          chefSpecial: "Chef's Special",
+          traditional: "Traditional",
+          vegetarian: "Vegetarian Option",
+          seafood: "Seafood",
+          beverage: "Beverage",
+          featured: "Featured"
+        }
       },
       nav: {
         home: "Home",
@@ -149,7 +179,22 @@ const resources = {
         myOrder: "طلبي",
         estimatedDelivery: "التسليم المقدر",
         popularItems: "الأطباق الشعبية",
-        topSellers: "الأكثر مبيعًا"
+        topSellers: "الأكثر مبيعًا",
+        all: "الكل",
+        addedToOrder: "تمت إضافته إلى طلبك",
+        ourMenu: "قائمتنا",
+        menuDescription: "اكتشف مجموعتنا من الأطباق المغربية الأصيلة، المحضرة بالتوابل التقليدية لإحضار النكهات الحقيقية للمغرب إلى طاولتك.",
+        viewFullMenu: "عرض القائمة الكاملة",
+        mostPopular: "الأكثر شعبية",
+        tags: {
+          spicy: "حار",
+          chefSpecial: "تخصص الشيف",
+          traditional: "تقليدي",
+          vegetarian: "خيار نباتي",
+          seafood: "مأكولات بحرية",
+          beverage: "مشروب",
+          featured: "مميز"
+        }
       },
       nav: {
         home: "الرئيسية",

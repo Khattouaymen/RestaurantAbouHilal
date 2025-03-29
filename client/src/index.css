@@ -8,16 +8,16 @@
     --background: 40 70% 96%;
     --foreground: 0 0% 10%;
     
-    /* Primary */
-    --primary: 36 78% 42%;
+    /* Primary - Rouge */
+    --primary: 0 80% 45%;
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary */
-    --secondary: 93 99% 13%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary - Jaune doré */
+    --secondary: 45 95% 50%;
+    --secondary-foreground: 0 0% 10%;
     
-    /* Accent */
-    --accent: 46 71% 52%;  /* Gold color */
+    /* Accent - Mélange */
+    --accent: 20 80% 55%;  /* Orange-rouge */
     --accent-foreground: 0 0% 10%;
     
     /* Cards, Borders, etc. */
@@ -27,16 +27,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
     
-    --border: 36 33% 80%;
-    --input: 36 33% 80%;
+    --border: 40 40% 85%;
+    --input: 40 40% 85%;
     
-    --muted: 36 30% 92%;
+    --muted: 40 30% 92%;
     --muted-foreground: 0 0% 40%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    --ring: 36 78% 42%;
+    --ring: 0 80% 45%;
     
     --radius: 0.5rem;
   }

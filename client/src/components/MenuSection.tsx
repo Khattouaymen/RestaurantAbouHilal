@@ -7,6 +7,7 @@ import BackgroundPattern from './BackgroundPattern';
 import { Category, MenuItem } from '@shared/schema';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface MenuSectionProps {
   menuItems: MenuItem[];
@@ -14,11 +15,13 @@ interface MenuSectionProps {
 }
 
 export default function MenuSection({ menuItems, categories }: MenuSectionProps) {
+  const { t, i18n } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isVisible, setIsVisible] = useState(false);
   const { addItem } = useCart();
   const { toast } = useToast();
   const sectionRef = useRef<HTMLElement>(null);
+  const isRTL = i18n.language === 'ar';
   
   // Définir un type spécifique pour l'élément de menu qui peut avoir price comme string ou number
   type MenuItemWithVariablePrice = {
@@ -143,48 +146,50 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
     });
 
     toast({
-      title: "Ajouté au panier",
-      description: `${item.name} a été ajouté à votre commande.`,
+      title: t('general.addToCart'),
+      description: `${item.name} ${t('general.addedToOrder')}`,
       duration: 3000,
     });
   };
 
   // Helper function to render the appropriate tag icon
   const getTagIcon = (tag: string) => {
+    const iconClass = `text-primary h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`;
+    
     switch (tag) {
       case 'spicy':
-        return <Flame className="text-primary mr-1 h-4 w-4" />;
+        return <Flame className={iconClass.replace('text-primary', 'text-primary')} />;
       case 'chef-special':
-        return <Award className="text-accent mr-1 h-4 w-4" />;
+        return <Award className={iconClass.replace('text-primary', 'text-accent')} />;
       case 'traditional':
-        return <Utensils className="text-secondary mr-1 h-4 w-4" />;
+        return <Utensils className={iconClass.replace('text-primary', 'text-secondary')} />;
       case 'vegetarian':
-        return <Leaf className="text-secondary mr-1 h-4 w-4" />;
+        return <Leaf className={iconClass.replace('text-primary', 'text-secondary')} />;
       case 'seafood':
-        return <Fish className="text-secondary mr-1 h-4 w-4" />;
+        return <Fish className={iconClass.replace('text-primary', 'text-secondary')} />;
       case 'beverage':
-        return <Coffee className="text-secondary mr-1 h-4 w-4" />;
+        return <Coffee className={iconClass.replace('text-primary', 'text-secondary')} />;
       default:
-        return <Utensils className="text-secondary mr-1 h-4 w-4" />;
+        return <Utensils className={iconClass.replace('text-primary', 'text-secondary')} />;
     }
   };
 
   const getTagLabel = (tag: string) => {
     switch (tag) {
       case 'spicy':
-        return 'Spicy';
+        return t('general.tags.spicy');
       case 'chef-special':
-        return 'Chef\'s Special';
+        return t('general.tags.chefSpecial');
       case 'traditional':
-        return 'Traditional';
+        return t('general.tags.traditional');
       case 'vegetarian':
-        return 'Vegetarian Option';
+        return t('general.tags.vegetarian');
       case 'seafood':
-        return 'Seafood';
+        return t('general.tags.seafood');
       case 'beverage':
-        return 'Beverage';
+        return t('general.tags.beverage');
       default:
-        return 'Featured';
+        return t('general.tags.featured');
     }
   };
 
@@ -197,10 +202,9 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <h2 className="font-playfair text-4xl font-bold mb-4">Our Menu</h2>
+          <h2 className="font-playfair text-4xl font-bold mb-4">{t('general.ourMenu')}</h2>
           <p className="text-gray-700 max-w-2xl mx-auto">
-            Discover our selection of authentic Moroccan dishes, prepared with traditional spices 
-            and techniques to bring the true flavors of Morocco to your table.
+            {t('general.menuDescription')}
           </p>
           
           {/* Menu Categories */}
@@ -210,7 +214,7 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
               className={selectedCategory === 'all' ? 'bg-primary text-white' : 'text-primary border-primary'}
               onClick={() => setSelectedCategory('all')}
             >
-              All
+              {t('general.all')}
             </Button>
             
             {availableCategories
@@ -250,28 +254,28 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
                 {item.featured === 1 && (
                   <div className="absolute inset-0 menu-item-overlay flex items-end">
                     <div className="p-4 text-white">
-                      <div className="font-bold">Most Popular</div>
+                      <div className="font-bold">{t('general.mostPopular')}</div>
                     </div>
                   </div>
                 )}
               </div>
               <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
+                <div className={`flex justify-between items-start mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <h3 className="font-playfair text-xl font-bold">{item.name}</h3>
-                  <span className="text-primary font-bold">{typeof item.price === 'number' ? item.price : item.price} Dhs</span>
+                  <span className="text-primary font-bold">{typeof item.price === 'number' ? item.price : item.price} {t('general.currency')}</span>
                 </div>
                 <p className="text-gray-600 mb-4">{item.description}</p>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
+                <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {getTagIcon(item.tags)}
-                    <span className="text-xs text-gray-500">{getTagLabel(item.tags)}</span>
+                    <span className={`text-xs text-gray-500 ${isRTL ? 'mr-1' : 'ml-1'}`}>{getTagLabel(item.tags)}</span>
                   </div>
                   <Button 
                     onClick={() => handleAddToOrder(item)}
                     className="bg-secondary hover:bg-opacity-90 text-white rounded-full text-sm"
                     size="sm"
                   >
-                    Add to Order
+                    {t('general.addToCart')}
                   </Button>
                 </div>
               </div>
@@ -281,8 +285,8 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
         
         <div className="text-center mt-12">
           <a href="/menu" className="inline-flex items-center text-primary font-semibold hover:underline">
-            Voir Le Menu Complet
-            <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {t('general.viewFullMenu')}
+            <svg className={`${isRTL ? 'mr-2 rotate-180' : 'ml-2'} h-4 w-4`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </a>
