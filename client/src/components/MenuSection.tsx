@@ -198,20 +198,22 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
       <BackgroundPattern />
       <div className="container mx-auto px-4 relative z-10">
         <div 
-          className={`text-center mb-16 transform transition-all duration-700 ${
+          className={`text-center mb-8 sm:mb-12 md:mb-16 transform transition-all duration-700 ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <h2 className="font-playfair text-4xl font-bold mb-4">{t('general.ourMenu')}</h2>
-          <p className="text-gray-700 max-w-2xl mx-auto">
+          <h2 className="font-playfair text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 md:mb-4">{t('general.ourMenu')}</h2>
+          <p className="text-gray-700 text-sm sm:text-base max-w-xs sm:max-w-xl md:max-w-2xl mx-auto px-4 sm:px-0">
             {t('general.menuDescription')}
           </p>
           
-          {/* Menu Categories */}
-          <div className="flex flex-wrap justify-center gap-4 mt-8">
+          {/* Menu Categories - Responsive */}
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 mt-6 md:mt-8 overflow-x-auto pb-2 max-w-full">
             <Button
               variant={selectedCategory === 'all' ? 'default' : 'outline'}
-              className={selectedCategory === 'all' ? 'bg-primary text-white' : 'text-primary border-primary'}
+              className={`text-xs sm:text-sm md:text-base px-3 py-1 h-auto ${
+                selectedCategory === 'all' ? 'bg-primary text-white' : 'text-primary border-primary'
+              }`}
               onClick={() => setSelectedCategory('all')}
             >
               {t('general.all')}
@@ -223,10 +225,11 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
                 <Button
                   key={category.id}
                   variant={selectedCategory === category.id.toString() ? 'default' : 'outline'}
-                  className={selectedCategory === category.id.toString() 
+                  className={`text-xs sm:text-sm md:text-base px-3 py-1 h-auto whitespace-nowrap ${
+                    selectedCategory === category.id.toString() 
                     ? 'bg-primary text-white' 
                     : 'text-primary border-primary hover:bg-primary hover:text-white'
-                  }
+                  }`}
                   onClick={() => setSelectedCategory(category.id.toString())}
                 >
                   {category.name}
@@ -236,8 +239,8 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
           </div>
         </div>
         
-        {/* Menu Items Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Menu Items Grid - Responsive pour téléphones et tablettes */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           {displayedMenuItems.map((item, index) => (
             <div 
               key={item.id}
@@ -245,26 +248,27 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
                 isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
               }`}
             >
-              <div className="h-56 relative overflow-hidden">
+              <div className="h-40 sm:h-48 md:h-56 relative overflow-hidden">
                 <img 
                   src={item.image} 
                   alt={item.name} 
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
                 {item.featured === 1 && (
                   <div className="absolute inset-0 menu-item-overlay flex items-end">
-                    <div className="p-4 text-white">
-                      <div className="font-bold">{t('general.mostPopular')}</div>
+                    <div className="p-3 sm:p-4 text-white">
+                      <div className="font-bold text-sm sm:text-base">{t('general.mostPopular')}</div>
                     </div>
                   </div>
                 )}
               </div>
-              <div className="p-6">
+              <div className="p-4 sm:p-5 md:p-6">
                 <div className={`flex justify-between items-start mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <h3 className="font-playfair text-xl font-bold">{item.name}</h3>
-                  <span className="text-primary font-bold">{typeof item.price === 'number' ? item.price : item.price} {t('general.currency')}</span>
+                  <h3 className="font-playfair text-base sm:text-lg md:text-xl font-bold">{item.name}</h3>
+                  <span className="text-primary font-bold text-sm sm:text-base whitespace-nowrap">{typeof item.price === 'number' ? item.price : item.price} {t('general.currency')}</span>
                 </div>
-                <p className="text-gray-600 mb-4">{item.description}</p>
+                <p className="text-gray-600 mb-3 md:mb-4 text-sm sm:text-base line-clamp-3">{item.description}</p>
                 <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {getTagIcon(item.tags)}
@@ -272,7 +276,7 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
                   </div>
                   <Button 
                     onClick={() => handleAddToOrder(item)}
-                    className="bg-secondary hover:bg-opacity-90 text-white rounded-full text-sm"
+                    className="bg-secondary hover:bg-opacity-90 text-white rounded-full text-xs sm:text-sm"
                     size="sm"
                   >
                     {t('general.addToCart')}
@@ -283,10 +287,10 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
           ))}
         </div>
         
-        <div className="text-center mt-12">
-          <a href="/menu" className="inline-flex items-center text-primary font-semibold hover:underline">
+        <div className="text-center mt-8 sm:mt-10 md:mt-12">
+          <a href="/menu" className="inline-flex items-center text-primary font-semibold text-sm sm:text-base hover:underline">
             {t('general.viewFullMenu')}
-            <svg className={`${isRTL ? 'mr-2 rotate-180' : 'ml-2'} h-4 w-4`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className={`${isRTL ? 'mr-1 sm:mr-2 rotate-180' : 'ml-1 sm:ml-2'} h-3 w-3 sm:h-4 sm:w-4`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </a>
