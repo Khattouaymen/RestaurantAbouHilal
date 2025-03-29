@@ -230,20 +230,20 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
               <div className="bg-white p-6 rounded-xl shadow-md mb-6">
                 <div className="flex justify-between mb-2">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{subtotal} Dhs</span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span>Delivery Fee</span>
-                  <span>${DELIVERY_FEE.toFixed(2)}</span>
+                  <span>{DELIVERY_FEE} Dhs</span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span>Tax</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>{tax} Dhs</span>
                 </div>
                 <div className="h-px bg-gray-200 my-3"></div>
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-primary">${total.toFixed(2)}</span>
+                  <span className="text-primary">{total} Dhs</span>
                 </div>
               </div>
               

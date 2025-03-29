@@ -241,7 +241,7 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
               <div className="p-6">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-playfair text-xl font-bold">{item.name}</h3>
-                  <span className="text-primary font-bold">${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</span>
+                  <span className="text-primary font-bold">{typeof item.price === 'number' ? item.price : item.price} Dhs</span>
                 </div>
                 <p className="text-gray-600 mb-4">{item.description}</p>
                 <div className="flex justify-between items-center">

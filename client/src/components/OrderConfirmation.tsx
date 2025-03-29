@@ -40,14 +40,14 @@ export default function OrderConfirmation({ isOpen, onClose, orderItems, onConfi
               {orderItems.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <span>{item.name} ({item.quantity})</span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+                  <span>{(item.price * item.quantity)} Dhs</span>
                 </div>
               ))}
             </div>
             <div className="h-px bg-gray-200 my-3"></div>
             <div className="flex justify-between font-bold">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>{total} Dhs</span>
             </div>
           </div>
           
