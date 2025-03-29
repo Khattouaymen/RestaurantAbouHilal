@@ -75,6 +75,7 @@ export const orders = pgTable("orders", {
   deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).notNull(),
   tax: decimal("tax", { precision: 10, scale: 2 }).notNull(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").default("pending").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -94,6 +95,7 @@ export const insertOrderSchema = createInsertSchema(orders).pick({
   deliveryFee: true,
   tax: true,
   total: true,
+  status: true,
 });
 
 export type InsertOrder = z.infer<typeof insertOrderSchema>;

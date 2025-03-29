@@ -106,6 +106,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching order" });
     }
   });
+  
+  // Get all orders with their items (for admin)
+  app.get("/api/orders", async (req, res) => {
+    try {
+      const orders = await storage.getAllOrders();
+      
+      // Enrichir chaque commande avec ses articles
+      const enrichedOrders = await Promise.all(orders.map(async (order) => {
+        const items = await storage.getOrderItems(order.id);
+        return {
+          ...order,
+          items
+        };
+      }));
+      
+      res.json(enrichedOrders);
+    } catch (error) {
+      console.error("Error fetching all orders:", error);
+      res.status(500).json({ message: "Error fetching orders" });
+    }
+  });
+  
+  // Update order status
+  app.put("/api/orders/:id/status", async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      if (isNaN(orderId)) {
+        return res.status(400).json({ message: "Invalid order ID" });
+      }
+      
+      const { status } = req.body;
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
+      }
+      
+      // Vérifier si la commande existe
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      // Mettre à jour le statut
+      const updatedOrder = await storage.updateOrderStatus(orderId, status);
+      
+      res.json(updatedOrder);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      res.status(500).json({ message: "Error updating order status" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

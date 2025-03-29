@@ -66,27 +66,87 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
   };
   
   // Handle order confirmation
-  const handleOrderConfirmation = () => {
-    setIsOrderConfirmationOpen(false);
-    clearCart();
-    
-    // Show success toast
-    toast({
-      title: "Order Placed Successfully!",
-      description: "Your delicious food is on its way.",
-    });
-    
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      notes: '',
-    });
-    
-    // Trigger success callback
-    onOrderSuccess();
+  const handleOrderConfirmation = async () => {
+    try {
+      // Create order data
+      const orderData = {
+        firstName: formData.name.split(' ')[0],
+        lastName: formData.name.split(' ').slice(1).join(' ') || '-',
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: '',
+        zipCode: '',
+        deliveryOption: 'standard',
+        deliveryTime: 'asap',
+        paymentMethod: 'cash',
+        specialInstructions: formData.notes,
+        subtotal: calculateSubtotal(),
+        deliveryFee: DELIVERY_FEE,
+        tax: calculateTax(TAX_RATE),
+        total: calculateTotal(TAX_RATE, DELIVERY_FEE),
+        status: 'pending', // Default status for new orders
+      };
+
+      // Send to server
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create order');
+      }
+
+      const data = await response.json();
+      
+      // Create order items
+      for (const item of items) {
+        await fetch('/api/order-items', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            orderId: data.id,
+            menuItemId: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          }),
+        });
+      }
+
+      setIsOrderConfirmationOpen(false);
+      clearCart();
+      
+      // Show success toast
+      toast({
+        title: "Order Placed Successfully!",
+        description: "Your delicious food is on its way.",
+      });
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        notes: '',
+      });
+      
+      // Trigger success callback
+      onOrderSuccess();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "There was a problem placing your order. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
@@ -211,7 +271,7 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">${(item.price * item.quantity).toFixed(2)}</div>
+                          <div className="font-bold">{(item.price * item.quantity).toFixed(2)} Dhs</div>
                           <button 
                             type="button"
                             onClick={() => removeItem(item.id)}

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import BackgroundPattern from './BackgroundPattern';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'wouter';
 
 interface FooterProps {
   onNavClick: (sectionId: string) => void;
@@ -92,6 +93,12 @@ export default function Footer({ onNavClick }: FooterProps) {
                     </a>
                   </li>
                 ))}
+                
+                <li>
+                  <Link href="/admin" className="text-white text-opacity-80 hover:text-opacity-100">
+                    Zone Admin
+                  </Link>
+                </li>
               </ul>
             </div>
             

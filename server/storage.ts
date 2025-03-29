@@ -29,6 +29,7 @@ export interface IStorage {
   getOrder(id: number): Promise<Order | undefined>;
   getAllOrders(): Promise<Order[]>;
   createOrder(order: InsertOrder): Promise<Order>;
+  updateOrderStatus(id: number, status: string): Promise<Order>;
   
   // OrderItem operations
   getOrderItem(id: number): Promise<OrderItem | undefined>;
@@ -139,10 +140,22 @@ export class MemStorage implements IStorage {
     const order: Order = { 
       ...insertOrder, 
       id, 
+      status: "pending", // Par défaut, toutes les commandes sont en attente
       createdAt: new Date() 
     };
     this.orderMap.set(id, order);
     return order;
+  }
+  
+  async updateOrderStatus(id: number, status: string): Promise<Order> {
+    const order = await this.getOrder(id);
+    if (!order) {
+      throw new Error(`Order with ID ${id} not found`);
+    }
+    
+    const updatedOrder = { ...order, status };
+    this.orderMap.set(id, updatedOrder);
+    return updatedOrder;
   }
   
   // OrderItem operations
