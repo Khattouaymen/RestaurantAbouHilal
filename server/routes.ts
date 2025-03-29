@@ -223,9 +223,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.addOrderItem(parsedOrderItem);
       }
       
+      // Get the order with items to confirm everything was saved correctly
+      const orderWithItems = await storage.getOrder(newOrder.id);
+      const orderItems = await storage.getOrderItems(newOrder.id);
+      
       res.status(201).json({ 
         message: "Order placed successfully", 
-        orderId: newOrder.id 
+        id: newOrder.id,
+        order: orderWithItems,
+        items: orderItems
       });
     } catch (error) {
       console.error("Error creating order:", error);
@@ -386,7 +392,7 @@ async function initializeData() {
       await storage.createMenuItem({
         name: item.name,
         description: item.description,
-        price: item.price,
+        price: item.price.toString(),
         image: item.image,
         categoryId: item.categoryId,
         featured: item.featured,

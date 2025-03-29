@@ -186,11 +186,17 @@ export default function Admin() {
     queryFn: async () => {
       const res = await fetch('/api/orders');
       const data = await res.json();
-      // Ajouter la propriété calculée customerName
-      return data.map((order: Order) => ({
-        ...order,
-        customerName: `${order.firstName} ${order.lastName}`
-      }));
+      // Vérifie que toute commande a ses articles et ajoute la propriété calculée customerName
+      return data.map((order: Order) => {
+        // S'assurer que les éléments sont un tableau
+        const items = Array.isArray(order.items) ? order.items : [];
+        
+        return {
+          ...order,
+          customerName: `${order.firstName} ${order.lastName}`,
+          items: items
+        };
+      });
     }
   });
 

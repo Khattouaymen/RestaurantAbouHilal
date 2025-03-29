@@ -96,7 +96,12 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
         },
         body: JSON.stringify({
           order: orderData,
-          items: items
+          items: items.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price.toString(),
+            quantity: item.quantity
+          }))
         }),
       });
 
@@ -105,23 +110,6 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
       }
 
       const data = await response.json();
-      
-      // Create order items
-      for (const item of items) {
-        await fetch('/api/order-items', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            orderId: data.id,
-            menuItemId: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-          }),
-        });
-      }
 
       setIsOrderConfirmationOpen(false);
       clearCart();
