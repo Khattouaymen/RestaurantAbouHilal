@@ -7,16 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import OrderConfirmation from './OrderConfirmation';
 
-// Constants
-const TAX_RATE = 0.08; // 8%
-const DELIVERY_FEE = 5.99;
+// Les constantes sont maintenant définies dans le hook useCart
+// Le delivery fee est de 20 Dhs, gratuit pour les commandes de plus de 80 Dhs
+// Une commission de 7% s'applique sur toutes les commandes
 
 interface OrderSectionProps {
   onOrderSuccess: () => void;
 }
 
 export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
-  const { items, removeItem, clearCart, calculateSubtotal, calculateTax, calculateTotal } = useCart();
+  const { items, removeItem, clearCart, calculateSubtotal, calculateCommission, calculateDeliveryFee, calculateTotal } = useCart();
   const [isOrderConfirmationOpen, setIsOrderConfirmationOpen] = useState(false);
   const { toast } = useToast();
   
@@ -31,8 +31,9 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
   
   // Calculate order totals
   const subtotal = calculateSubtotal();
-  const tax = calculateTax(TAX_RATE);
-  const total = calculateTotal(TAX_RATE, DELIVERY_FEE);
+  const commission = calculateCommission();
+  const deliveryFee = calculateDeliveryFee();
+  const total = calculateTotal();
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -81,10 +82,10 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
         deliveryTime: 'asap',
         paymentMethod: 'cash',
         specialInstructions: formData.notes || null,
-        subtotal: calculateSubtotal().toString(),
-        deliveryFee: DELIVERY_FEE.toString(),
-        tax: calculateTax(TAX_RATE).toString(),
-        total: calculateTotal(TAX_RATE, DELIVERY_FEE).toString(),
+        subtotal: subtotal.toString(),
+        deliveryFee: deliveryFee.toString(),
+        commission: commission.toString(),
+        total: total.toString(),
         status: 'pending', // Default status for new orders
       };
 
@@ -281,20 +282,20 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
               <div className="bg-white p-6 rounded-xl shadow-md mb-6">
                 <div className="flex justify-between mb-2">
                   <span>Subtotal</span>
-                  <span>{subtotal} Dhs</span>
+                  <span>{subtotal.toFixed(2)} Dhs</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span>Delivery Fee</span>
-                  <span>{DELIVERY_FEE} Dhs</span>
+                  <span>Commission (7%)</span>
+                  <span>{commission.toFixed(2)} Dhs</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span>Tax</span>
-                  <span>{tax} Dhs</span>
+                  <span>Delivery Fee {subtotal >= 80 ? '(Free over 80 Dhs)' : ''}</span>
+                  <span>{deliveryFee.toFixed(2)} Dhs</span>
                 </div>
                 <div className="h-px bg-gray-200 my-3"></div>
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-primary">{total} Dhs</span>
+                  <span className="text-primary">{total.toFixed(2)} Dhs</span>
                 </div>
               </div>
               

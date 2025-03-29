@@ -8,11 +8,16 @@ interface CartContextType {
   updateQuantity: (itemId: number, quantity: number) => void;
   clearCart: () => void;
   calculateSubtotal: () => number;
-  calculateTax: (taxRate: number) => number;
-  calculateTotal: (taxRate: number, deliveryFee: number) => number;
+  calculateCommission: () => number;
+  calculateDeliveryFee: () => number;
+  calculateTotal: () => number;
 }
 
 const CART_STORAGE_KEY = 'abou-hilal-cart';
+
+const COMMISSION_RATE = 0.07; // 7% 
+const FREE_DELIVERY_THRESHOLD = 80; // En Dhs
+const DELIVERY_FEE = 20; // En Dhs
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -81,14 +86,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return items.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  // Calculate tax
-  const calculateTax = (taxRate: number) => {
-    return calculateSubtotal() * taxRate;
+  // Calculate commission (7%)
+  const calculateCommission = () => {
+    return calculateSubtotal() * COMMISSION_RATE;
+  };
+
+  // Calculate delivery fee (free if subtotal >= FREE_DELIVERY_THRESHOLD)
+  const calculateDeliveryFee = () => {
+    return calculateSubtotal() >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   };
 
   // Calculate total
-  const calculateTotal = (taxRate: number, deliveryFee: number) => {
-    return calculateSubtotal() + calculateTax(taxRate) + deliveryFee;
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateCommission() + calculateDeliveryFee();
   };
 
   return (
@@ -100,7 +110,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity, 
         clearCart, 
         calculateSubtotal,
-        calculateTax,
+        calculateCommission,
+        calculateDeliveryFee,
         calculateTotal
       }}
     >
