@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import BackgroundPattern from './BackgroundPattern';
+import LanguageSelector from './LanguageSelector';
 
 interface HeaderProps {
   activeSectionId: string;
@@ -8,8 +10,14 @@ interface HeaderProps {
 }
 
 export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
+  const { t, i18n } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
+  // Appliquer la direction du texte selon la langue
+  useEffect(() => {
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  }, [i18n.language]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,11 +38,11 @@ export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
   };
 
   const navItems = [
-    { id: 'home', label: 'Home' },
-    { id: 'about', label: 'About' },
-    { id: 'menu', label: 'Menu' },
-    { id: 'gallery', label: 'Gallery' },
-    { id: 'contact', label: 'Contact' },
+    { id: 'home', label: t('nav.home') },
+    { id: 'about', label: t('nav.about') },
+    { id: 'menu', label: t('nav.menu') },
+    { id: 'gallery', label: t('nav.gallery') },
+    { id: 'contact', label: t('nav.contact') },
   ];
 
   return (
@@ -78,8 +86,9 @@ export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
               }}
               className="bg-primary hover:bg-opacity-90 text-white py-2 px-6 rounded-full transition-colors font-semibold"
             >
-              Order Now
+              {t('nav.order')}
             </a>
+            <LanguageSelector />
           </div>
           
           {/* Mobile Menu Button */}
@@ -123,8 +132,11 @@ export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
               }}
               className="bg-primary hover:bg-opacity-90 text-white py-3 px-6 rounded-full transition-colors font-semibold text-center mt-2"
             >
-              Order Now
+              {t('nav.order')}
             </a>
+            <div className="my-2 py-2 border-t border-gray-200">
+              <LanguageSelector />
+            </div>
           </div>
         </div>
       </nav>

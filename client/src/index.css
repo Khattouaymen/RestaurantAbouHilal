@@ -74,4 +74,39 @@
   .menu-item-overlay {
     background: linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.7) 100%);
   }
+  
+  /* Support pour les langues RTL comme l'arabe */
+  .rtl-language {
+    direction: rtl;
+    text-align: right;
+  }
+  
+  .rtl-language * {
+    font-family: 'Noto Sans Arabic', 'Open Sans', sans-serif;
+  }
+  
+  /* Lorsque la page est en mode RTL */
+  html[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+  }
+  
+  html[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
+  }
+  
+  html[dir="rtl"] .flex-row {
+    flex-direction: row-reverse;
+  }
+  
+  html[dir="rtl"] .ml-auto {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  
+  html[dir="rtl"] .mr-auto {
+    margin-right: 0;
+    margin-left: auto;
+  }
 }
