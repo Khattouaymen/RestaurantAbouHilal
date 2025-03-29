@@ -68,8 +68,12 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
 
   // If no data is available yet, show fallback menu items
   // Cast MenuItems to our MenuItemWithVariablePrice type for safe handling of price property
+  // Afficher tous les plats sans limite
   const displayedMenuItems = menuItems.length > 0 
-    ? menuItems.filter(item => selectedCategory === 'all' || item.categoryId.toString() === selectedCategory) as unknown as MenuItemWithVariablePrice[]
+    ? (selectedCategory === 'all' 
+        ? menuItems 
+        : menuItems.filter(item => item.categoryId.toString() === selectedCategory)
+      ) as unknown as MenuItemWithVariablePrice[]
     : [
         {
           id: 1,
@@ -241,6 +245,7 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
         
         {/* Menu Items Grid - Responsive pour téléphones et tablettes */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+          {/* Afficher tous les éléments sans limite */}
           {displayedMenuItems.map((item, index) => (
             <div 
               key={item.id}
