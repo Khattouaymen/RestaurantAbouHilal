@@ -12,6 +12,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useCart } from '@/hooks/useCart';
 import type { MenuItem, Category } from '@shared/schema';
 import { useTranslation } from 'react-i18next';
+import SEOHelmet from '@/components/SEOHelmet';
+import { RestaurantStructuredData } from '@/components/StructuredData';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -72,6 +74,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOHelmet 
+        title={t('home.title', 'Cuisine Marocaine Authentique à Casablanca')}
+        description={t('home.description', 'Découvrez les saveurs authentiques du Maroc chez ABOU Hilal. Commandez en ligne et profitez d\'une livraison rapide de nos spécialités marocaines préparées avec des ingrédients frais.')}
+      />
       <Header activeSectionId={activeSectionId} onNavClick={scrollToSection} />
       
       <div className="flex flex-col lg:flex-row">
@@ -162,6 +168,35 @@ export default function Home() {
         isOpen={showConfirmation} 
         onClose={handleCloseConfirmation} 
         orderItems={items} 
+      />
+      
+      <RestaurantStructuredData
+        name="Restaurant ABOU Hilal"
+        description="Restaurant marocain authentique à Casablanca proposant des plats traditionnels et une livraison à domicile."
+        image="https://abou-hilal.ma/logo.svg"
+        url="https://abou-hilal.ma"
+        address={{
+          streetAddress: "123 Avenue Hassan II",
+          addressLocality: "Casablanca",
+          postalCode: "20000",
+          addressCountry: "MA"
+        }}
+        geo={{
+          latitude: 33.5731,
+          longitude: -7.5898
+        }}
+        telephone="+212 522 123 456"
+        priceRange="$$"
+        servesCuisine={["Marocain", "Méditerranéen", "Halal"]}
+        openingHours={[
+          "Monday 11:00-23:00",
+          "Tuesday 11:00-23:00",
+          "Wednesday 11:00-23:00",
+          "Thursday 11:00-23:00",
+          "Friday 11:00-23:30",
+          "Saturday 11:00-23:30",
+          "Sunday 12:00-22:00"
+        ]}
       />
     </div>
   );

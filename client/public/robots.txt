@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://abou-hilal.ma/sitemap.xml

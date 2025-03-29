@@ -5,17 +5,15 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { SiCoffeescript } from 'react-icons/si';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSSOLoading, setIsSSOLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { login, loginWithSSO, isAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
   // Rediriger vers /admin si déjà authentifié
   useEffect(() => {
@@ -52,21 +50,6 @@ export default function Login() {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleSSOLogin = async () => {
-    setIsSSOLoading(true);
-    try {
-      await loginWithSSO();
-      // Pas besoin de redirection explicite ici, elle sera gérée par le SSO
-    } catch (error) {
-      toast({
-        title: 'Erreur SSO',
-        description: 'Une erreur s\'est produite lors de la connexion SSO.',
-        variant: 'destructive',
-      });
-      setIsSSOLoading(false);
     }
   };
 
@@ -117,27 +100,6 @@ export default function Login() {
               {isLoading ? 'Connexion...' : 'Se connecter'}
             </Button>
           </form>
-          
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-gray-50 px-2 text-muted-foreground">Ou connectez-vous avec</span>
-              </div>
-            </div>
-            
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full mt-4"
-              onClick={handleSSOLogin}
-              disabled={isSSOLoading}
-            >
-              {isSSOLoading ? 'Connexion...' : 'Authentification SSO'}
-            </Button>
-          </div>
         </CardContent>
         <CardFooter className="text-center text-sm text-gray-500">
           Pour accéder à la démo, utilisez: admin / admin123

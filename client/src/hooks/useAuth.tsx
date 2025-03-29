@@ -4,7 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
-  loginWithSSO: () => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   userData: UserData | null;
@@ -73,25 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithSSO = async (): Promise<void> => {
-    try {
-      // Redirect to the SSO authentication endpoint
-      const ssoAuthUrl = '/api/auth/sso';
-      
-      // Store the current URL to redirect back after auth
-      localStorage.setItem('redirectAfterAuth', window.location.pathname);
-      
-      // Redirect to the SSO authentication endpoint
-      window.location.href = ssoAuthUrl;
-    } catch (error) {
-      toast({
-        title: "Erreur SSO",
-        description: "Impossible de se connecter via SSO. Veuillez réessayer.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -102,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, loginWithSSO, logout, isLoading, userData }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, isLoading, userData }}>
       {children}
     </AuthContext.Provider>
   );

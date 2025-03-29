@@ -8,9 +8,12 @@ import { useCart } from '@/hooks/useCart';
 import { Category, MenuItem } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import SEOHelmet from '@/components/SEOHelmet';
+import { useTranslation } from 'react-i18next';
 
 export default function FullMenu() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [, setLocation] = useLocation();
   const [isCartVisible, setIsCartVisible] = useState(false);
@@ -63,6 +66,11 @@ export default function FullMenu() {
 
   return (
     <div className="bg-background min-h-screen">
+      <SEOHelmet 
+        title={t('menu.title', 'Menu Complet - Tous nos plats et spécialités')}
+        description={t('menu.description', 'Découvrez toute notre carte et commandez en ligne. Notre menu propose des entrées, plats principaux et desserts préparés selon les recettes traditionnelles marocaines.')}
+        pathname="/menu"
+      />
       {/* Header with back button */}
       <div className="bg-white shadow">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
