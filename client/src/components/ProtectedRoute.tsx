@@ -9,13 +9,22 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+
+  // Log l'état actuel pour le débogage
+  console.log('ProtectedRoute state:', { 
+    isAuthenticated, 
+    isLoading, 
+    currentLocation: location 
+  });
 
   useEffect(() => {
+    // Seulement rediriger si on n'est pas en train de charger et qu'on n'est pas authentifié
     if (!isLoading && !isAuthenticated) {
+      console.log('ProtectedRoute: redirecting to /login');
       setLocation('/login');
     }
-  }, [isAuthenticated, isLoading, setLocation]);
+  }, [isAuthenticated, isLoading, setLocation, location]);
 
   if (isLoading) {
     return (
@@ -28,9 +37,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
+  // Ne rien rendre si on n'est pas authentifié, la redirection se fera dans useEffect
   if (!isAuthenticated) {
-    return null; // Will redirect in useEffect
+    return null;
   }
 
+  // Si on est authentifié, afficher les enfants
   return <>{children}</>;
 }

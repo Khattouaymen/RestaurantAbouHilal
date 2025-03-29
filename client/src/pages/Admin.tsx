@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useLocation } from 'wouter';
-import { LogOut } from 'lucide-react';
+import { useLocation, Link } from 'wouter';
+import { LogOut, Settings, ShoppingBag } from 'lucide-react';
 
 interface OrderItem {
   id: number;
@@ -275,16 +275,29 @@ export default function Admin() {
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Administration des commandes</h1>
-        <Button 
-          variant="outline" 
-          onClick={handleLogout}
-          className="flex items-center gap-2"
-        >
-          <LogOut size={16} />
-          Déconnexion
-        </Button>
+        <h1 className="text-3xl font-bold">Administration</h1>
+        <div className="flex gap-3">
+          <Link href="/admin/menu">
+            <Button 
+              variant="secondary" 
+              className="flex items-center gap-2"
+            >
+              <ShoppingBag size={16} />
+              Gérer le menu
+            </Button>
+          </Link>
+          <Button 
+            variant="outline" 
+            onClick={handleLogout}
+            className="flex items-center gap-2"
+          >
+            <LogOut size={16} />
+            Déconnexion
+          </Button>
+        </div>
       </div>
+      
+      <h2 className="text-2xl font-semibold mb-6">Gestion des commandes</h2>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="mb-4">

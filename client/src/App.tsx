@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
+import AdminMenu from "@/pages/AdminMenu";
 import Login from "@/pages/Login";
 import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -18,6 +19,11 @@ function Router() {
       <Route path="/admin">
         <ProtectedRoute>
           <Admin />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/menu">
+        <ProtectedRoute>
+          <AdminMenu />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

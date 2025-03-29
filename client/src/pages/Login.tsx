@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { SiCoffeescript } from 'react-icons/si';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -12,21 +13,23 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { login, isAuthenticated } = useAuth();
+
+  // Rediriger vers /admin si déjà authentifié
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation('/admin');
+    }
+  }, [isAuthenticated, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const success = await login(username, password);
 
-      if (response.ok) {
+      if (success) {
         toast({
           title: 'Connexion réussie',
           description: 'Vous êtes maintenant connecté.',

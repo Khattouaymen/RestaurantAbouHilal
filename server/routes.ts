@@ -79,6 +79,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching menu items" });
     }
   });
+  
+  // Get a single menu item by ID
+  app.get("/api/menu-items/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid menu item ID" });
+      }
+      
+      const menuItem = await storage.getMenuItem(id);
+      if (!menuItem) {
+        return res.status(404).json({ message: "Menu item not found" });
+      }
+      
+      res.json(menuItem);
+    } catch (error) {
+      console.error("Error fetching menu item:", error);
+      res.status(500).json({ message: "Error fetching menu item" });
+    }
+  });
+
+  // Create a new menu item (protected by auth)
+  app.post("/api/menu-items", isAuthenticated, async (req, res) => {
+    try {
+      const newMenuItem = req.body;
+      
+      // Validation basique (à améliorer avec Zod)
+      if (!newMenuItem.name || !newMenuItem.price || !newMenuItem.categoryId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      const menuItem = await storage.createMenuItem(newMenuItem);
+      res.status(201).json(menuItem);
+    } catch (error) {
+      console.error("Error creating menu item:", error);
+      res.status(500).json({ message: "Error creating menu item" });
+    }
+  });
 
   // Menu items by category
   app.get("/api/menu-items/category/:categoryId", async (req, res) => {
@@ -156,8 +194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get all orders with their items (for admin)
-  app.get("/api/orders", async (req, res) => {
+  // Get all orders with their items (for admin, protected by auth)
+  app.get("/api/orders", isAuthenticated, async (req, res) => {
     try {
       const orders = await storage.getAllOrders();
       
@@ -257,26 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ isAuthenticated: false });
   });
   
-  // Get all orders (protected by auth)
-  app.get("/api/orders", isAuthenticated, async (req, res) => {
-    try {
-      const orders = await storage.getAllOrders();
-      
-      // Enrichir chaque commande avec ses articles
-      const enrichedOrders = await Promise.all(orders.map(async (order) => {
-        const items = await storage.getOrderItems(order.id);
-        return {
-          ...order,
-          items
-        };
-      }));
-      
-      res.json(enrichedOrders);
-    } catch (error) {
-      console.error("Error fetching all orders:", error);
-      res.status(500).json({ message: "Error fetching orders" });
-    }
-  });
+
 
   const httpServer = createServer(app);
   return httpServer;
