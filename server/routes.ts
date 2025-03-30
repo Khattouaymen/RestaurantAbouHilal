@@ -205,6 +205,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate order data
       const { order, items } = req.body;
       
+      if (!order || !items || !Array.isArray(items)) {
+        return res.status(400).json({ message: "Données de commande invalides" });
+      }
+
       const parsedOrder = insertOrderSchema.parse(order);
       
       // Create order

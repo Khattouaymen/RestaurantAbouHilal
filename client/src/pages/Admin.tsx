@@ -183,7 +183,12 @@ export default function Admin() {
   
   const { data: orders = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['/api/orders'],
+    retry: 1,
     queryFn: async () => {
+      const res = await fetch('/api/orders');
+      if (!res.ok) {
+        throw new Error('Erreur lors du chargement des commandes');
+      }
       const res = await fetch('/api/orders');
       const data = await res.json();
       // Vérifie que toute commande a ses articles et ajoute la propriété calculée customerName
