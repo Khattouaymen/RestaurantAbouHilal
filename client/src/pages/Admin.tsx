@@ -189,7 +189,6 @@ export default function Admin() {
       if (!res.ok) {
         throw new Error('Erreur lors du chargement des commandes');
       }
-      const res = await fetch('/api/orders');
       const data = await res.json();
       // Vérifie que toute commande a ses articles et ajoute la propriété calculée customerName
       return data.map((order: Order) => {
