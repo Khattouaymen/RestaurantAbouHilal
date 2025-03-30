@@ -114,18 +114,26 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
         items: items
       });
       
+      const data = await response.json();
+      
       if (response.ok) {
         // Invalidate orders cache
         queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
         
         // Show success
         onOrderSuccess();
+        toast({
+          title: "Succès",
+          description: "Votre commande a été enregistrée avec succès!",
+        });
+      } else {
+        throw new Error(data.message || "Erreur lors de la commande");
       }
     } catch (error) {
       console.error("Error placing order:", error);
       toast({
-        title: "Error",
-        description: "There was a problem placing your order. Please try again.",
+        title: "Erreur de commande",
+        description: error instanceof Error ? error.message : "Une erreur s'est produite lors de la commande. Veuillez vérifier vos informations et réessayer.",
         variant: "destructive",
       });
     }
