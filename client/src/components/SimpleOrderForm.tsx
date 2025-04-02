@@ -7,16 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import OrderConfirmation from './OrderConfirmation';
 
-// Les constantes sont maintenant définies dans le hook useCart
-// Le delivery fee est de 20 Dhs, gratuit pour les commandes de plus de 80 Dhs
-// Une commission de 7% s'applique sur toutes les commandes
+// Constants
+const TAX_RATE = 0.08; // 8%
+const DELIVERY_FEE = 5.99;
+const MINIMUM_ORDER_AMOUNT = 80; // Minimum order amount in DH
+const DELIVERY_FEE_PERCENTAGE = 0.07; // 7% delivery fee
 
 interface OrderSectionProps {
   onOrderSuccess: () => void;
 }
 
 export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
-  const { items, removeItem, clearCart, calculateSubtotal, calculateCommission, calculateDeliveryFee, calculateTotal } = useCart();
+  const { items, removeItem, clearCart, calculateSubtotal, calculateTax, calculateTotal, updateQuantity } = useCart();
   const [isOrderConfirmationOpen, setIsOrderConfirmationOpen] = useState(false);
   const { toast } = useToast();
   
@@ -31,9 +33,8 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
   
   // Calculate order totals
   const subtotal = calculateSubtotal();
-  const commission = calculateCommission();
-  const deliveryFee = calculateDeliveryFee();
-  const total = calculateTotal();
+  const deliveryFee = subtotal * DELIVERY_FEE_PERCENTAGE;
+  const total = subtotal + deliveryFee;
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -61,6 +62,15 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
       });
       return;
     }
+
+    if (subtotal < MINIMUM_ORDER_AMOUNT) {
+      toast({
+        title: "Minimum Order Required",
+        description: `Your order must be at least ${MINIMUM_ORDER_AMOUNT} DH to proceed.`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Show confirmation dialog
     setIsOrderConfirmationOpen(true);
@@ -82,10 +92,10 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
         deliveryTime: 'asap',
         paymentMethod: 'cash',
         specialInstructions: formData.notes || null,
-        subtotal: subtotal.toString(),
-        deliveryFee: deliveryFee.toString(),
-        commission: commission.toString(),
-        total: total.toString(),
+        subtotal: calculateSubtotal().toString(),
+        deliveryFee: DELIVERY_FEE.toString(),
+        tax: calculateTax(TAX_RATE).toString(),
+        total: calculateTotal(TAX_RATE, DELIVERY_FEE).toString(),
         status: 'pending', // Default status for new orders
       };
 
@@ -145,23 +155,24 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
     <section id="order" className="py-16 bg-background relative">
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="font-playfair text-4xl font-bold mb-4">Place Your Order</h2>
+          <h2 className="font-playfair text-4xl font-bold mb-4">Passez votre commande</h2>
           <p className="text-gray-700 max-w-2xl mx-auto">
-            Enjoy our delicious Moroccan dishes delivered straight to your door. 
-            Complete the form below to place your order.
+            Profitez de nos délicieux plats marocains livrés directement chez vous. 
+            Complétez le formulaire ci-dessous pour passer votre commande.
           </p>
         </div>
         
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-          {/* Order Confirmation Modal */}
+          {/* Modal de confirmation de commande */}
           <OrderConfirmation
             isOpen={isOrderConfirmationOpen}
             onClose={() => setIsOrderConfirmationOpen(false)}
             orderItems={items}
             onConfirm={handleOrderConfirmation}
+            deliveryAddress={formData.address} // Pass the address from the form
           />
         
-          {/* Order Form and Cart */}
+          {/* Formulaire de commande et affichage du panier */}
           <div className="flex flex-col md:flex-row">
             <div className="md:w-1/2 p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -234,7 +245,7 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
             </div>
             
             <div className="md:w-1/2 bg-background p-8">
-              <h3 className="font-playfair text-2xl font-bold mb-6">Your Order</h3>
+              <h3 className="font-playfair text-2xl font-bold mb-6">Votre Panier</h3>
               
               {/* Order Items */}
               <div className="space-y-4 mb-6">
@@ -247,29 +258,65 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
                 ) : (
                   <div className="divide-y">
                     {/* Order Items */}
-                    {items.map((item) => (
-                      <div key={item.id} className="py-4 flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="w-16 h-16 rounded-lg overflow-hidden mr-4">
+                    {items.map(item => (
+                      <div key={item.id} className="flex items-center justify-between py-3">
+                        {/* Photo du plat (si disponible) */}
+                        {item.image && (
+                          <div className="flex-shrink-0 mr-3">
                             <img 
                               src={item.image} 
                               alt={item.name} 
-                              className="w-full h-full object-cover"
+                              className="w-16 h-16 object-cover rounded"
                             />
                           </div>
-                          <div>
-                            <h4 className="font-bold">{item.name}</h4>
-                            <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                          </div>
+                        )}
+                        
+                        <div className="flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-gray-500">{item.description}</p>
                         </div>
-                        <div className="text-right">
-                          <div className="font-bold">{(item.price * item.quantity).toFixed(2)} Dhs</div>
+                        
+                        {/* Contrôles de quantité et prix (déjà bien positionnés) */}
+                        <div className="flex items-center gap-4">
+                          {/* Quantité avec boutons +/- */}
+                          <div className="flex items-center border rounded">
+                            <button 
+                              onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                              className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                              type="button"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                              className="w-12 text-center border-x py-1"
+                            />
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                              type="button"
+                            >
+                              +
+                            </button>
+                          </div>
+                          
+                          {/* Prix à droite */}
+                          <div className="font-bold text-right min-w-[80px]">
+                            {(item.price * item.quantity).toFixed(2)} Dhs
+                          </div>
+                          
                           <button 
+                            onClick={() => removeItem(item.id)} 
+                            className="ml-2 text-red-500 hover:text-red-700"
                             type="button"
-                            onClick={() => removeItem(item.id)}
-                            className="text-red-500 text-sm flex items-center"
                           >
-                            <X className="h-3 w-3 mr-1" /> Remove
+                            <span className="sr-only">Supprimer</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -280,22 +327,26 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
               
               {/* Order Summary */}
               <div className="bg-white p-6 rounded-xl shadow-md mb-6">
-                <div className="flex justify-between mb-2">
-                  <span>Subtotal</span>
-                  <span>{subtotal.toFixed(2)} Dhs</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span>Commission (7%)</span>
-                  <span>{commission.toFixed(2)} Dhs</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span>Delivery Fee {subtotal >= 80 ? '(Free over 80 Dhs)' : ''}</span>
-                  <span>{deliveryFee.toFixed(2)} Dhs</span>
-                </div>
-                <div className="h-px bg-gray-200 my-3"></div>
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-primary">{total.toFixed(2)} Dhs</span>
+                <div className="space-y-2 border-t pt-4">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>{subtotal.toFixed(2)} DH</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Delivery Fee (7%):</span>
+                    <span>{deliveryFee.toFixed(2)} DH</span>
+                  </div>
+                  
+                  {subtotal < MINIMUM_ORDER_AMOUNT && (
+                    <div className="text-red-500 text-sm mt-2">
+                      * Minimum order amount is {MINIMUM_ORDER_AMOUNT} DH. Add {(MINIMUM_ORDER_AMOUNT - subtotal).toFixed(2)} DH more to proceed.
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                    <span>Total:</span>
+                    <span>{total.toFixed(2)} DH</span>
+                  </div>
                 </div>
               </div>
               

@@ -55,3 +55,5 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Suppression de la fonction playNotificationSound

@@ -1,6 +1,6 @@
 // Menu categories
 export const MENU_CATEGORIES = [
-  { id: 1, name: 'All', slug: 'all' },
+  { id: 1, name: 'Tous', slug: 'all' },
   { id: 2, name: 'Entrées Froides', slug: 'entrees-froides' },
   { id: 3, name: 'Entrées Chaudes', slug: 'entrees-chaudes' },
   { id: 4, name: 'Pâtes', slug: 'pates' },

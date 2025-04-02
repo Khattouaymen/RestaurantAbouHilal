@@ -29,14 +29,13 @@ const formSchema = insertOrderSchema.extend({
 export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
-  const { items, calculateSubtotal, calculateTotal, calculateTax, removeItem } = useCart();
+  const { items, calculateSubtotal, calculateTotal, calculateDeliveryFee, meetsMinimumOrder, removeItem } = useCart();
   const { toast } = useToast();
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   const subtotal = calculateSubtotal();
-  const TAX_RATE = 0.08; // 8% tax rate
-  const DELIVERY_FEE = items.length > 0 ? 4.99 : 0;
-  const tax = calculateTax(TAX_RATE);
-  const total = calculateTotal(TAX_RATE, DELIVERY_FEE);
+  const deliveryFee = calculateDeliveryFee();
+  const total = calculateTotal();
   
   // Form definition
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,8 +53,7 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
       paymentMethod: "credit-card",
       specialInstructions: "",
       subtotal: subtotal,
-      deliveryFee: DELIVERY_FEE,
-      tax: tax,
+      deliveryFee: deliveryFee,
       total: total
     },
   });
@@ -63,10 +61,9 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
   // Update totals when cart changes
   useEffect(() => {
     form.setValue("subtotal", subtotal);
-    form.setValue("deliveryFee", DELIVERY_FEE);
-    form.setValue("tax", tax);
+    form.setValue("deliveryFee", deliveryFee);
     form.setValue("total", total);
-  }, [items, subtotal, tax, total]);
+  }, [items, subtotal, deliveryFee, total]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -99,12 +96,14 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
       return;
     }
 
+    // Show confirmation dialog
+    setShowConfirmation(true);
+
     try {
       const orderData = {
         ...values,
         subtotal,
-        deliveryFee: DELIVERY_FEE,
-        tax,
+        deliveryFee: deliveryFee,
         total
       };
       
@@ -114,26 +113,18 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
         items: items
       });
       
-      const data = await response.json();
-      
       if (response.ok) {
         // Invalidate orders cache
         queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
         
         // Show success
         onOrderSuccess();
-        toast({
-          title: "Succès",
-          description: "Votre commande a été enregistrée avec succès!",
-        });
-      } else {
-        throw new Error(data.message || "Erreur lors de la commande");
       }
     } catch (error) {
       console.error("Error placing order:", error);
       toast({
-        title: "Erreur de commande",
-        description: error instanceof Error ? error.message : "Une erreur s'est produite lors de la commande. Veuillez vérifier vos informations et réessayer.",
+        title: "Error",
+        description: "There was a problem placing your order. Please try again.",
         variant: "destructive",
       });
     }
@@ -422,11 +413,7 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
                 </div>
                 <div className="flex justify-between mb-2">
                   <span>Delivery Fee</span>
-                  <span id="delivery-fee">${DELIVERY_FEE.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span>Tax</span>
-                  <span id="tax">${tax.toFixed(2)}</span>
+                  <span id="delivery-fee">${deliveryFee.toFixed(2)}</span>
                 </div>
                 <div className="h-px bg-gray-200 my-3"></div>
                 <div className="flex justify-between text-lg font-bold">
@@ -483,6 +470,16 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
           </div>
         </div>
       </div>
+      <OrderConfirmation
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        orderItems={items}
+        onConfirm={() => {
+          // Handle confirmation logic
+          setShowConfirmation(false);
+        }}
+        deliveryAddress={form.getValues("address")} // Pass the full address
+      />
     </section>
   );
 }

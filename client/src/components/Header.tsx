@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Menu, X, ShoppingCart } from 'lucide-react';
 import BackgroundPattern from './BackgroundPattern';
-import LanguageSelector from './LanguageSelector';
+import { useCart } from '@/hooks/useCart';
+import { Badge } from '@/components/ui/badge';
 
 interface HeaderProps {
   activeSectionId: string;
@@ -10,16 +10,15 @@ interface HeaderProps {
 }
 
 export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
-  const { t, i18n } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  
-  // Appliquer la direction du texte selon la langue
-  useEffect(() => {
-    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
-  }, [i18n.language]);
+  const { items } = useCart();
+  const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
+    // Check initial scroll position on mount
+    setScrolled(window.scrollY > 50);
+    
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
@@ -38,31 +37,52 @@ export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
   };
 
   const navItems = [
-    { id: 'home', label: t('nav.home') },
-    { id: 'about', label: t('nav.about') },
-    { id: 'menu', label: t('nav.menu') },
-    { id: 'gallery', label: t('nav.gallery') },
-    { id: 'contact', label: t('nav.contact') },
+    { id: 'home', label: 'Accueil' },
+    { id: 'about', label: 'À propos' },
+    { id: 'menu', label: 'Menu' },
+    { id: 'gallery', label: 'Galerie' },
+    { id: 'contact', label: 'Contact' },
   ];
 
   return (
-    <header className={`relative z-40 ${scrolled ? 'bg-white/95 shadow-md' : ''} transition-all duration-300`}>
-      <BackgroundPattern />
-      <nav className="container mx-auto px-4 py-6 relative z-10">
+    <header 
+      className={`fixed w-full top-0 transition-all duration-300 z-50 ${
+        scrolled ? 'bg-black/95 shadow-md py-2' : 'py-2'
+      }`}
+    >
+      {/* Image d'arrière-plan des feux BBQ */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-cover bg-center z-0 opacity-100"
+        style={{ 
+          backgroundImage: `url('https://sigmawire.net/i/04/5SFnEr.png')`,
+          filter: scrolled ? 'brightness(0.2)' : 'brightness(0.5)'
+        }}
+      ></div>
+      
+      <BackgroundPattern className={scrolled ? 'opacity-5' : 'opacity-10'} />
+      <div className="container mx-auto px-4 relative z-10">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center">
             <a 
               href="#" 
-              onClick={() => handleNavClick('home')} 
-              className="text-primary font-playfair text-2xl md:text-3xl font-bold"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavClick('home');
+              }} 
+              className="transition-colors duration-300"
             >
-              ABOU Hilal
+              {/* Remplacer le texte par l'image logo */}
+              <img 
+                src="https://sigmawire.net/i/04/CxemIw.png" 
+                alt="ABOU Hilal" 
+                className="h-12 md:h-14 object-contain"
+              />
             </a>
           </div>
           
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-6">
             {navItems.map(item => (
               <a 
                 key={item.id}
@@ -71,44 +91,90 @@ export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
                   e.preventDefault();
                   handleNavClick(item.id);
                 }}
-                className={`transition-colors font-semibold ${
-                  activeSectionId === item.id ? 'text-primary' : 'text-foreground hover:text-primary'
+                className={`transition-colors duration-300 font-semibold text-sm relative px-1 py-1 group ${
+                  activeSectionId === item.id 
+                    ? 'text-primary' 
+                    : 'text-white hover:text-primary'
                 }`}
               >
                 {item.label}
+                <span className={`absolute left-0 right-0 bottom-0 h-0.5 bg-primary transform scale-x-0 transition-transform group-hover:scale-x-100 ${
+                  activeSectionId === item.id ? 'scale-x-100' : ''
+                }`}></span>
               </a>
             ))}
+            
+            <div className="flex items-center space-x-3">
+              {/* Panier */}
+              <div className="relative">
+                <a 
+                  href="#order"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick('order');
+                  }}
+                  className="p-1 rounded-full transition-colors flex items-center space-x-2 text-white hover:text-primary"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  {cartItemCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 bg-primary text-white w-4 h-4 flex items-center justify-center p-0 text-xs rounded-full">
+                      {cartItemCount}
+                    </Badge>
+                  )}
+                </a>
+              </div>
+              
+              {/* Bouton Commander */}
+              <a 
+                href="#order"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick('order');
+                }}
+                className="bg-primary hover:bg-primary-600 text-white py-1 px-4 rounded-full transition-colors font-medium text-sm"
+              >
+                Commander
+              </a>
+            </div>
+          </div>
+          
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center space-x-3">
+            {/* Panier pour mobile */}
             <a 
               href="#order"
               onClick={(e) => {
                 e.preventDefault();
                 handleNavClick('order');
               }}
-              className="bg-primary hover:bg-opacity-90 text-white py-2 px-6 rounded-full transition-colors font-semibold"
+              className="p-1 rounded-full relative text-white"
             >
-              {t('nav.order')}
+              <ShoppingCart className="h-4 w-4" />
+              {cartItemCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 bg-primary text-white w-4 h-4 flex items-center justify-center p-0 text-xs rounded-full">
+                  {cartItemCount}
+                </Badge>
+              )}
             </a>
-            <LanguageSelector />
+            
+            <button 
+              onClick={toggleMobileMenu}
+              className="focus:outline-none text-white"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
-          
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={toggleMobileMenu}
-            className="md:hidden text-foreground focus:outline-none"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
         
         {/* Mobile Navigation */}
         <div 
-          className={`md:hidden absolute top-full left-0 right-0 bg-white shadow-lg py-4 px-6 z-20 transform transition-all duration-300 ease-in-out ${
+          className={`md:hidden absolute top-full left-0 right-0 bg-white shadow-lg py-3 px-6 z-20 transform transition-all duration-300 ease-in-out ${
             mobileMenuOpen 
               ? 'opacity-100 translate-y-0' 
               : 'opacity-0 -translate-y-2 pointer-events-none'
           }`}
         >
-          <div className="flex flex-col space-y-4">
+          <div className="flex flex-col space-y-3">
             {navItems.map(item => (
               <a 
                 key={item.id}
@@ -117,7 +183,7 @@ export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
                   e.preventDefault();
                   handleNavClick(item.id);
                 }}
-                className={`transition-colors font-semibold py-2 ${
+                className={`transition-colors font-medium py-1 text-sm border-b border-gray-100 ${
                   activeSectionId === item.id ? 'text-primary' : 'text-foreground hover:text-primary'
                 }`}
               >
@@ -130,16 +196,13 @@ export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
                 e.preventDefault();
                 handleNavClick('order');
               }}
-              className="bg-primary hover:bg-opacity-90 text-white py-3 px-6 rounded-full transition-colors font-semibold text-center mt-2"
+              className="bg-primary hover:bg-opacity-90 text-white py-2 px-4 rounded-full transition-colors font-medium text-sm text-center mt-1"
             >
-              {t('nav.order')}
+              Commander
             </a>
-            <div className="my-2 py-2 border-t border-gray-200">
-              <LanguageSelector />
-            </div>
           </div>
         </div>
-      </nav>
+      </div>
     </header>
   );
 }

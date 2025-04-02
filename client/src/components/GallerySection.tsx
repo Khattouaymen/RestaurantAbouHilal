@@ -58,8 +58,7 @@ export default function GallerySection() {
         >
           <h2 className="font-playfair text-4xl font-bold mb-4">Gallery</h2>
           <p className="text-gray-700 max-w-2xl mx-auto">
-            Step inside our restaurant and explore our vibrant atmosphere, traditional decor, 
-            and artfully prepared dishes.
+          Entrez dans notre restaurant et découvrez notre atmosphère vibrante, notre décor traditionnel et nos plats préparés avec soin.
           </p>
         </div>
         

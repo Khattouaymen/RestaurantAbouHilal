@@ -62,7 +62,7 @@ export default function Footer({ onNavClick }: FooterProps) {
               ABOU Hilal
             </button>
             <p className="max-w-xs text-white text-opacity-80">
-              Bringing the authentic flavors of Morocco to your table since 1985.
+            Apporter les saveurs authentiques du Maroc à votre table depuis 1985
             </p>
           </div>
           

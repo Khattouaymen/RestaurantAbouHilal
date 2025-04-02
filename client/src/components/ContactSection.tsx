@@ -60,8 +60,7 @@ export default function ContactSection() {
           >
             <h2 className="font-playfair text-4xl font-bold mb-6">Visit Us</h2>
             <p className="text-gray-700 mb-8 leading-relaxed">
-              Experience the authentic flavors and warm atmosphere of Morocco at our restaurant. 
-              We look forward to welcoming you for an unforgettable dining experience.
+            Découvrez les saveurs authentiques et l'atmosphère chaleureuse du Maroc dans notre restaurant. Nous avons hâte de vous accueillir pour une expérience culinaire inoubliable.
             </p>
             
             <div className="space-y-6">

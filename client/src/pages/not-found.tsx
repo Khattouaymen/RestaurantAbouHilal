@@ -12,7 +12,7 @@ export default function NotFound() {
           </div>
 
           <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
+          Oups, cette page n'existe pas ! Retournez à notre page principale pour commander votre délicieux repas.
           </p>
         </CardContent>
       </Card>

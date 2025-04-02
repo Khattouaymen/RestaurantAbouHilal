@@ -69,25 +69,21 @@ export default function AboutSection() {
           >
             <div className="flex items-center mb-4">
               <div className="h-px bg-primary flex-grow"></div>
-              <h2 className="font-playfair text-3xl md:text-4xl font-bold px-4">Our Story</h2>
+              <h2 className="font-playfair text-3xl md:text-4xl font-bold px-4">Notre Histoire</h2>
               <div className="h-px bg-primary flex-grow"></div>
             </div>
             
             <p className="text-gray-700 mb-6 leading-relaxed">
-              For over 35 years, ABOU Hilal has been bringing the authentic flavors of Morocco to your city. 
-              Our journey began when Chef Hilal Mansouri, inspired by his grandmother's recipes, opened a small 
-              family restaurant dedicated to sharing the rich culinary traditions of his homeland.
+            Depuis plus de 35 ans, ABOU Hilal apporte les saveurs authentiques du Maroc dans votre ville. Notre aventure a commencé lorsque le Chef Hilal Mansouri, inspiré par les recettes de sa grand-mère, a ouvert un petit restaurant familial dédié à partager les riches traditions culinaires de son pays natal.
             </p>
             
             <p className="text-gray-700 mb-6 leading-relaxed">
-              Today, we continue to honor those traditions by using time-tested recipes, premium ingredients, 
-              and the perfect blend of exotic spices. Every dish tells a story of Moroccan heritage, and every 
-              visit provides an opportunity to experience the warmth and hospitality that defines our culture.
+            Aujourd'hui, nous continuons à honorer ces traditions en utilisant des recettes éprouvées, des ingrédients de qualité supérieure et le mélange parfait d'épices exotiques. Chaque plat raconte une histoire du patrimoine marocain, et chaque visite offre l'occasion de découvrir la chaleur et l'hospitalité qui définissent notre culture.
             </p>
             
             <div className="flex items-center text-secondary">
               <Utensils className="mr-3 h-6 w-6" />
-              <span className="font-playfair text-xl">Traditional recipes passed down through generations</span>
+              <span className="font-playfair text-xl">Des recettes traditionnelles transmises de génération en génération.</span>
             </div>
           </div>
         </div>

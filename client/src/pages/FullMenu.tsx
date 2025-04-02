@@ -1,23 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ChevronLeft, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, ShoppingCart, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCart } from '@/hooks/useCart';
 import { Category, MenuItem } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import SEOHelmet from '@/components/SEOHelmet';
-import { useTranslation } from 'react-i18next';
+
+// Constantes pour les règles de commande
+const MINIMUM_ORDER_AMOUNT = 80; // Montant minimum de commande en DH
+const DELIVERY_FEE_PERCENTAGE = 0.07; // 7% pour les frais de livraison
 
 export default function FullMenu() {
   const { toast } = useToast();
-  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [, setLocation] = useLocation();
   const [isCartVisible, setIsCartVisible] = useState(false);
-  const { addItem, items, removeItem, updateQuantity, clearCart, calculateSubtotal, calculateCommission, calculateDeliveryFee, calculateTotal } = useCart();
+  const { addItem } = useCart();
+  
+  // Ajouter une référence pour le panier
+  const cartRef = useRef<HTMLDivElement>(null);
+  
+  // Modifier le gestionnaire pour l'icône du panier
+  const toggleCart = () => {
+    setIsCartVisible(!isCartVisible);
+    
+    // Si le panier devient visible, faire défiler jusqu'à sa position
+    if (!isCartVisible) {
+      setTimeout(() => {
+        cartRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100); // Petit délai pour s'assurer que le panier est affiché avant le défilement
+    }
+  };
   
   // Fetch categories
   const { data: categories = [] } = useQuery<Category[]>({
@@ -56,21 +72,32 @@ export default function FullMenu() {
       image: item.image
     });
     
+    // Rendre le panier visible automatiquement après l'ajout d'un article
+    setIsCartVisible(true);
+    
     toast({
       title: "Ajouté au panier",
       description: `${item.name} a été ajouté à votre commande.`,
     });
   };
   
+  const { items, removeItem, updateQuantity, clearCart, calculateSubtotal } = useCart();
   const hasItems = items.length > 0;
+  
+  // Calcul du sous-total
+  const subtotal = calculateSubtotal();
+  
+  // Calcul des frais de livraison (7% du sous-total)
+  const deliveryFee = subtotal * DELIVERY_FEE_PERCENTAGE;
+  
+  // Calcul du total
+  const total = subtotal + deliveryFee;
+  
+  // Vérifier si la commande atteint le minimum requis
+  const meetsMinimumOrder = subtotal >= MINIMUM_ORDER_AMOUNT;
 
   return (
     <div className="bg-background min-h-screen">
-      <SEOHelmet 
-        title={t('menu.title', 'Menu Complet - Tous nos plats et spécialités')}
-        description={t('menu.description', 'Découvrez toute notre carte et commandez en ligne. Notre menu propose des entrées, plats principaux et desserts préparés selon les recettes traditionnelles marocaines.')}
-        pathname="/menu"
-      />
       {/* Header with back button */}
       <div className="bg-white shadow">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -84,7 +111,7 @@ export default function FullMenu() {
           <Button 
             variant="ghost" 
             className="relative"
-            onClick={() => setIsCartVisible(!isCartVisible)}
+            onClick={toggleCart}
           >
             <ShoppingCart size={20} />
             {hasItems && (
@@ -165,7 +192,7 @@ export default function FullMenu() {
           
           {/* Cart sidebar - Only visible when isCartVisible is true */}
           {isCartVisible && (
-            <div className="w-full lg:w-1/3 sticky top-20 h-fit">
+            <div ref={cartRef} className="w-full lg:w-1/3 sticky top-20 h-fit">
               <div className="bg-white rounded-xl shadow-md p-6">
                 <h2 className="font-playfair text-xl font-bold mb-4 flex items-center">
                   <ShoppingCart className="mr-2" size={20} />
@@ -221,25 +248,48 @@ export default function FullMenu() {
                     <div className="space-y-2 border-t pt-4">
                       <div className="flex justify-between">
                         <span>Sous-total</span>
-                        <span>{calculateSubtotal().toFixed(2)} Dhs</span>
+                        <span>{subtotal.toFixed(2)} Dhs</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Commission (7%)</span>
-                        <span>{calculateCommission().toFixed(2)} Dhs</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Livraison {calculateSubtotal() >= 80 ? '(Gratuite > 80 Dhs)' : ''}</span>
-                        <span>{calculateDeliveryFee().toFixed(2)} Dhs</span>
+                        <span>Frais de livraison (7%)</span>
+                        <span>{deliveryFee.toFixed(2)} Dhs</span>
                       </div>
                       <div className="flex justify-between font-bold text-lg pt-2 border-t">
                         <span>Total</span>
-                        <span>{calculateTotal().toFixed(2)} Dhs</span>
+                        <span>{total.toFixed(2)} Dhs</span>
                       </div>
                     </div>
                     
+                    {!meetsMinimumOrder && (
+                      <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-2 text-sm text-amber-800">
+                        <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                        <p>Commande minimum de {MINIMUM_ORDER_AMOUNT} Dhs. Ajoutez {(MINIMUM_ORDER_AMOUNT - subtotal).toFixed(2)} Dhs pour continuer.</p>
+                      </div>
+                    )}
+                    
                     <div className="mt-4 space-y-2">
-                      <Button className="w-full" size="lg" onClick={() => setLocation('/')}>
-                        Commander
+                      <Button 
+                        className="w-full" 
+                        size="lg" 
+b                        onClick={() => {
+                          // Fermer le panier visible
+                          setIsCartVisible(false);
+                          
+                          // Naviguer vers la page d'accueil avec l'ancre #order
+                          setLocation('/#order');
+                          
+                          // Ajouter un petit délai pour s'assurer que la navigation est complète avant de faire défiler
+                          setTimeout(() => {
+                            // Faire défiler jusqu'à la section de commande
+                            const orderSection = document.getElementById('order');
+                            if (orderSection) {
+                              orderSection.scrollIntoView({ behavior: 'smooth' });
+                            }
+                          }, 100);
+                        }}
+                        disabled={!meetsMinimumOrder}
+                      >
+                        {meetsMinimumOrder ? 'Commander' : `Minimum ${MINIMUM_ORDER_AMOUNT} Dhs requis`}
                       </Button>
                       <Button variant="outline" className="w-full" size="sm" onClick={clearCart}>
                         Vider le panier
@@ -260,6 +310,21 @@ export default function FullMenu() {
           )}
         </div>
       </div>
+      
+      {/* Bouton du panier - visible seulement sur mobile ou quand le panier est caché */}
+      {(!isCartVisible || window.innerWidth < 1024) && (
+        <Button 
+          onClick={toggleCart}
+          className="fixed bottom-4 right-4 z-10 rounded-full w-16 h-16 flex items-center justify-center"
+        >
+          <ShoppingCart className="w-6 h-6" />
+          {items.reduce((acc, item) => acc + item.quantity, 0) > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+              {items.reduce((acc, item) => acc + item.quantity, 0)}
+            </span>
+          )}
+        </Button>
+      )}
     </div>
   );
 }

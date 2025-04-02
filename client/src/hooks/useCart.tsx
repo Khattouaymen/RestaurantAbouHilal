@@ -8,16 +8,13 @@ interface CartContextType {
   updateQuantity: (itemId: number, quantity: number) => void;
   clearCart: () => void;
   calculateSubtotal: () => number;
-  calculateCommission: () => number;
-  calculateDeliveryFee: () => number;
+  calculateTax: (taxRate: number) => number; // Keep for backward compatibility
   calculateTotal: () => number;
+  calculateDeliveryFee: () => number;
+  meetsMinimumOrder: () => boolean;
 }
 
 const CART_STORAGE_KEY = 'abou-hilal-cart';
-
-const COMMISSION_RATE = 0.07; // 7% 
-const FREE_DELIVERY_THRESHOLD = 80; // En Dhs
-const DELIVERY_FEE = 20; // En Dhs
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -86,19 +83,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return items.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  // Calculate commission (7%)
-  const calculateCommission = () => {
-    return calculateSubtotal() * COMMISSION_RATE;
+  // Calculate tax
+  const calculateTax = (taxRate: number) => {
+    return calculateSubtotal() * taxRate;
   };
 
-  // Calculate delivery fee (free if subtotal >= FREE_DELIVERY_THRESHOLD)
+  // Calculate delivery fee (7% of subtotal)
   const calculateDeliveryFee = () => {
-    return calculateSubtotal() >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+    return calculateSubtotal() * 0.07;
   };
 
-  // Calculate total
+  // Calculate total (now without tax)
   const calculateTotal = () => {
-    return calculateSubtotal() + calculateCommission() + calculateDeliveryFee();
+    return calculateSubtotal() + calculateDeliveryFee();
+  };
+
+  // Check if order meets minimum amount
+  const meetsMinimumOrder = () => {
+    return calculateSubtotal() >= 80;
   };
 
   return (
@@ -110,9 +112,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity, 
         clearCart, 
         calculateSubtotal,
-        calculateCommission,
+        calculateTax, // Keep for backward compatibility
+        calculateTotal,
         calculateDeliveryFee,
-        calculateTotal
+        meetsMinimumOrder
       }}
     >
       {children}

@@ -31,6 +31,8 @@ interface Order {
   
   // Propriété calculée pour l'affichage
   customerName?: string;
+  // Propriété pour les frais de livraison
+  deliveryFee?: number;
 }
 
 // Statuses de commande
@@ -57,7 +59,13 @@ const formatDate = (dateString: string) => {
 
 // Fonction pour calculer le total d'une commande
 const calculateOrderTotal = (items: OrderItem[]) => {
-  return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const deliveryFee = subtotal * 0.07; // 7% de frais de livraison
+  return {
+    subtotal,
+    deliveryFee,
+    total: subtotal + deliveryFee
+  };
 };
 
 // Composant pour afficher les détails d'une commande
@@ -65,6 +73,8 @@ function OrderDetails({ order, onStatusChange }: { order: Order, onStatusChange:
   const handleStatusChange = (status: string) => {
     onStatusChange(order.id, status);
   };
+
+  const { subtotal, deliveryFee, total } = calculateOrderTotal(order.items);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -90,7 +100,7 @@ function OrderDetails({ order, onStatusChange }: { order: Order, onStatusChange:
              order.status === ORDER_STATUSES.OUT_FOR_DELIVERY ? 'En livraison' :
              order.status === ORDER_STATUSES.DELIVERED ? 'Livrée' : 'Annulée'}
           </span>
-          <span className="font-bold text-lg mt-2">{calculateOrderTotal(order.items)} Dhs</span>
+          <span className="font-bold text-lg mt-2">{total.toFixed(2)} Dhs</span>
         </div>
       </div>
       
@@ -114,13 +124,22 @@ function OrderDetails({ order, onStatusChange }: { order: Order, onStatusChange:
             {order.items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <span>{item.quantity}x {item.name}</span>
-                <span>{item.price * item.quantity} Dhs</span>
+                <span>{(item.price * item.quantity).toFixed(2)} Dhs</span>
               </div>
             ))}
             <div className="h-px bg-gray-200 my-2"></div>
+            <div className="flex justify-between text-sm">
+              <span>Sous-total</span>
+              <span>{subtotal.toFixed(2)} Dhs</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Frais de livraison (7%)</span>
+              <span>{deliveryFee.toFixed(2)} Dhs</span>
+            </div>
+            <div className="h-px bg-gray-200 my-2"></div>
             <div className="flex justify-between font-bold">
               <span>Total</span>
-              <span>{calculateOrderTotal(order.items)} Dhs</span>
+              <span>{total.toFixed(2)} Dhs</span>
             </div>
           </div>
         </div>
@@ -180,15 +199,14 @@ function OrderDetails({ order, onStatusChange }: { order: Order, onStatusChange:
 export default function Admin() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [lastOrderCount, setLastOrderCount] = useState<number>(0);
+  const [hasNewOrders, setHasNewOrders] = useState<boolean>(false);
+  const [newOrderIds, setNewOrderIds] = useState<number[]>([]);
   
   const { data: orders = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['/api/orders'],
-    retry: 1,
     queryFn: async () => {
       const res = await fetch('/api/orders');
-      if (!res.ok) {
-        throw new Error('Erreur lors du chargement des commandes');
-      }
       const data = await res.json();
       // Vérifie que toute commande a ses articles et ajoute la propriété calculée customerName
       return data.map((order: Order) => {
@@ -201,11 +219,49 @@ export default function Admin() {
           items: items
         };
       });
+    },
+    // Actualiser automatiquement toutes les 5 secondes pour une mise à jour plus rapide
+    refetchInterval: 5000,
+    onSuccess: (data) => {
+      // Si c'est le premier chargement, juste enregistrer le nombre
+      if (lastOrderCount === 0) {
+        setLastOrderCount(data.length);
+        return;
+      }
+      
+      // Vérifier s'il y a de nouvelles commandes
+      if (data.length > lastOrderCount) {
+        // Identifier les nouvelles commandes
+        const sortedData = [...data].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        
+        // Récupérer les IDs des nouvelles commandes (les n premières, où n est le nombre de nouvelles commandes)
+        const newOrdersCount = data.length - lastOrderCount;
+        const newIds = sortedData.slice(0, newOrdersCount).map(order => order.id);
+        
+        setNewOrderIds(newIds);
+        setHasNewOrders(true);
+        
+        // Notification pour nouvelles commandes
+        toast({
+          title: "Nouvelles commandes",
+          description: `${newOrdersCount} nouvelle(s) commande(s) reçue(s)`,
+          variant: "default",
+        });
+      }
+      
+      setLastOrderCount(data.length);
     }
   });
 
+  // Trier les commandes par date (plus récentes en premier)
+  const sortedOrders = [...orders].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
   // Filtrer les commandes en fonction de l'onglet actif
-  const filteredOrders = orders.filter((order: Order) => {
+  const filteredOrders = sortedOrders.filter((order: Order) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'active') {
       return order.status !== ORDER_STATUSES.DELIVERED && order.status !== ORDER_STATUSES.CANCELLED;
@@ -213,6 +269,11 @@ export default function Admin() {
     return order.status === activeTab;
   });
   
+  // Réinitialiser l'indicateur de nouvelles commandes lors du changement d'onglet
+  useEffect(() => {
+    setHasNewOrders(false);
+  }, [activeTab]);
+
   // Fonction pour mettre à jour le statut d'une commande
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
@@ -282,6 +343,22 @@ export default function Admin() {
     }
   };
 
+  // Composant pour afficher les détails d'une commande avec mise en évidence pour les nouvelles commandes
+  function OrderDetailsWithHighlight({ order, onStatusChange, isNew }: { 
+    order: Order, 
+    onStatusChange: (orderId: number, status: string) => void,
+    isNew: boolean 
+  }) {
+    return (
+      <div className={`bg-white rounded-lg shadow-md p-6 mb-6 transition-all duration-300 ${
+        isNew ? 'border-l-4 border-primary animate-pulse-border' : ''
+      }`}>
+        {/* Contenu existant du composant OrderDetails */}
+        <OrderDetails order={order} onStatusChange={onStatusChange} />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="flex justify-between items-center mb-6">
@@ -307,7 +384,14 @@ export default function Admin() {
         </div>
       </div>
       
-      <h2 className="text-2xl font-semibold mb-6">Gestion des commandes</h2>
+      <h2 className="text-2xl font-semibold mb-6">
+        Gestion des commandes
+        {hasNewOrders && (
+          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white animate-pulse">
+            Nouvelles commandes
+          </span>
+        )}
+      </h2>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="mb-4">
@@ -328,10 +412,11 @@ export default function Admin() {
           ) : (
             <div>
               {filteredOrders.map((order: Order) => (
-                <OrderDetails 
+                <OrderDetailsWithHighlight 
                   key={order.id} 
                   order={order} 
                   onStatusChange={handleStatusChange} 
+                  isNew={newOrderIds.includes(order.id)}
                 />
               ))}
             </div>

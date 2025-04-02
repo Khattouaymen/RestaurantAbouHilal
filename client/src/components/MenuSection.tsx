@@ -7,7 +7,6 @@ import BackgroundPattern from './BackgroundPattern';
 import { Category, MenuItem } from '@shared/schema';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
-import { useTranslation } from 'react-i18next';
 
 interface MenuSectionProps {
   menuItems: MenuItem[];
@@ -15,13 +14,13 @@ interface MenuSectionProps {
 }
 
 export default function MenuSection({ menuItems, categories }: MenuSectionProps) {
-  const { t, i18n } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isVisible, setIsVisible] = useState(false);
   const { addItem } = useCart();
   const { toast } = useToast();
   const sectionRef = useRef<HTMLElement>(null);
-  const isRTL = i18n.language === 'ar';
+  // État pour stocker les quantités sélectionnées
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
   
   // Définir un type spécifique pour l'élément de menu qui peut avoir price comme string ou number
   type MenuItemWithVariablePrice = {
@@ -68,12 +67,8 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
 
   // If no data is available yet, show fallback menu items
   // Cast MenuItems to our MenuItemWithVariablePrice type for safe handling of price property
-  // Afficher tous les plats sans limite
-  const displayedMenuItems = menuItems.length > 0 
-    ? (selectedCategory === 'all' 
-        ? menuItems 
-        : menuItems.filter(item => item.categoryId.toString() === selectedCategory)
-      ) as unknown as MenuItemWithVariablePrice[]
+  const availableItems = menuItems.length > 0 
+    ? menuItems as unknown as MenuItemWithVariablePrice[]
     : [
         {
           id: 1,
@@ -137,7 +132,14 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
         }
       ];
 
+  // Filtrer les éléments du menu en fonction de la catégorie sélectionnée
+  const displayedMenuItems = selectedCategory === 'all' 
+    ? availableItems.filter(item => item.featured === 1).slice(0, 6) // Uniquement les plats populaires/vedettes
+    : availableItems.filter(item => item.categoryId.toString() === selectedCategory).slice(0, 6);
+
   const handleAddToOrder = (item: MenuItemWithVariablePrice) => {
+    // Utilise la quantité sélectionnée ou 1 par défaut
+    const quantity = quantities[item.id] || 1;
     // Assurez-vous que le prix est un nombre
     const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
     
@@ -145,55 +147,53 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
       id: item.id,
       name: item.name,
       price,
-      quantity: 1,
+      quantity: quantity,
       image: item.image
     });
 
     toast({
-      title: t('general.addToCart'),
-      description: `${item.name} ${t('general.addedToOrder')}`,
+      title: "Ajouté au panier",
+      description: `${quantity} × ${item.name} ajouté à votre commande.`,
       duration: 3000,
     });
   };
 
   // Helper function to render the appropriate tag icon
   const getTagIcon = (tag: string) => {
-    const iconClass = `text-primary h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`;
-    
     switch (tag) {
       case 'spicy':
-        return <Flame className={iconClass.replace('text-primary', 'text-primary')} />;
+        return <Flame className="text-primary mr-1 h-4 w-4" />;
       case 'chef-special':
-        return <Award className={iconClass.replace('text-primary', 'text-accent')} />;
+        return <Award className="text-accent mr-1 h-4 w-4" />;
       case 'traditional':
-        return <Utensils className={iconClass.replace('text-primary', 'text-secondary')} />;
+        return <Utensils className="text-secondary mr-1 h-4 w-4" />;
       case 'vegetarian':
-        return <Leaf className={iconClass.replace('text-primary', 'text-secondary')} />;
+        return <Leaf className="text-secondary mr-1 h-4 w-4" />;
       case 'seafood':
-        return <Fish className={iconClass.replace('text-primary', 'text-secondary')} />;
+        return <Fish className="text-secondary mr-1 h-4 w-4" />;
       case 'beverage':
-        return <Coffee className={iconClass.replace('text-primary', 'text-secondary')} />;
+        return <Coffee className="text-secondary mr-1 h-4 w-4" />;
       default:
-        return <Utensils className={iconClass.replace('text-primary', 'text-secondary')} />;
+        return <Utensils className="text-secondary mr-1 h-4 w-4" />;
     }
   };
 
   const getTagLabel = (tag: string) => {
     switch (tag) {
       case 'spicy':
-        return t('general.tags.spicy');
+        return 'Spicy';
       case 'chef-special':
-        return t('general.tags.chefSpecial');
+        return 'Chef\'s Special';
       case 'traditional':
-        return t('general.tags.traditional');
+        return 'Traditional';
       case 'vegetarian':
-        return t('general.tags.vegetarian');
+        return 'Vegetarian Option';
       case 'seafood':
-        return t('general.tags.seafood');
+        return 'Seafood';
       case 'beverage':
-        return t('general.tags.beverage');
+        return 'Beverage';
       default:
-        return t('general.tags.featured');
+        return 'Featured';
     }
   };
 
@@ -202,25 +202,23 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
       <BackgroundPattern />
       <div className="container mx-auto px-4 relative z-10">
         <div 
-          className={`text-center mb-8 sm:mb-12 md:mb-16 transform transition-all duration-700 ${
+          className={`text-center mb-16 transform transition-all duration-700 ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <h2 className="font-playfair text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 md:mb-4">{t('general.ourMenu')}</h2>
-          <p className="text-gray-700 text-sm sm:text-base max-w-xs sm:max-w-xl md:max-w-2xl mx-auto px-4 sm:px-0">
-            {t('general.menuDescription')}
+          <h2 className="font-playfair text-4xl font-bold mb-4">Notre Menu</h2>
+          <p className="text-gray-700 max-w-2xl mx-auto">
+            Découvrez notre sélection de plats marocains authentiques, préparés avec des épices et techniques traditionnelles pour vous faire vivre la véritable expérience culinaire du Maroc.
           </p>
           
-          {/* Menu Categories - Responsive */}
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 mt-6 md:mt-8 overflow-x-auto pb-2 max-w-full">
+          {/* Menu Categories */}
+          <div className="flex flex-wrap justify-center gap-4 mt-8">
             <Button
               variant={selectedCategory === 'all' ? 'default' : 'outline'}
-              className={`text-xs sm:text-sm md:text-base px-3 py-1 h-auto ${
-                selectedCategory === 'all' ? 'bg-primary text-white' : 'text-primary border-primary'
-              }`}
+              className={selectedCategory === 'all' ? 'bg-primary text-white' : 'text-primary border-primary'}
               onClick={() => setSelectedCategory('all')}
             >
-              {t('general.all')}
+              Plats Populaires
             </Button>
             
             {availableCategories
@@ -229,11 +227,10 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
                 <Button
                   key={category.id}
                   variant={selectedCategory === category.id.toString() ? 'default' : 'outline'}
-                  className={`text-xs sm:text-sm md:text-base px-3 py-1 h-auto whitespace-nowrap ${
-                    selectedCategory === category.id.toString() 
+                  className={selectedCategory === category.id.toString() 
                     ? 'bg-primary text-white' 
                     : 'text-primary border-primary hover:bg-primary hover:text-white'
-                  }`}
+                  }
                   onClick={() => setSelectedCategory(category.id.toString())}
                 >
                   {category.name}
@@ -243,9 +240,8 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
           </div>
         </div>
         
-        {/* Menu Items Grid - Responsive pour téléphones et tablettes */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-          {/* Afficher tous les éléments sans limite */}
+        {/* Menu Items Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {displayedMenuItems.map((item, index) => (
             <div 
               key={item.id}
@@ -253,49 +249,58 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
                 isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
               }`}
             >
-              <div className="h-40 sm:h-48 md:h-56 relative overflow-hidden">
+              <div className="h-56 relative overflow-hidden">
                 <img 
                   src={item.image} 
                   alt={item.name} 
                   className="w-full h-full object-cover"
-                  loading="lazy"
                 />
                 {item.featured === 1 && (
                   <div className="absolute inset-0 menu-item-overlay flex items-end">
-                    <div className="p-3 sm:p-4 text-white">
-                      <div className="font-bold text-sm sm:text-base">{t('general.mostPopular')}</div>
+                    <div className="p-4 text-white">
+                      <div className="font-bold">Most Popular</div>
                     </div>
                   </div>
                 )}
               </div>
-              <div className="p-4 sm:p-5 md:p-6">
-                <div className={`flex justify-between items-start mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <h3 className="font-playfair text-base sm:text-lg md:text-xl font-bold">{item.name}</h3>
-                  <span className="text-primary font-bold text-sm sm:text-base whitespace-nowrap">{typeof item.price === 'number' ? item.price : item.price} {t('general.currency')}</span>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-playfair text-xl font-bold">{item.name}</h3>
+                  <span className="text-primary font-bold">{typeof item.price === 'number' ? item.price : item.price} Dhs</span>
                 </div>
-                <p className="text-gray-600 mb-3 md:mb-4 text-sm sm:text-base line-clamp-3">{item.description}</p>
-                <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <p className="text-gray-600 mb-4">{item.description}</p>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
                     {getTagIcon(item.tags)}
-                    <span className={`text-xs text-gray-500 ${isRTL ? 'mr-1' : 'ml-1'}`}>{getTagLabel(item.tags)}</span>
+                    <span className="text-xs text-gray-500">{getTagLabel(item.tags)}</span>
                   </div>
-                  <Button 
-                    onClick={() => handleAddToOrder(item)}
-                    className="bg-secondary hover:bg-opacity-90 text-white rounded-full text-xs sm:text-sm"
-                    size="sm"
-                  >
-                    {t('general.addToCart')}
-                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      defaultValue="1"
+                      className="w-12 p-1 border rounded text-center text-sm"
+                      onChange={(e) => setQuantities(prev => ({ ...prev, [item.id]: parseInt(e.target.value) || 1 }))}
+                    />
+                    <Button 
+                      onClick={() => handleAddToOrder(item)}
+                      className="bg-yellow-500 text-white hover:bg-yellow-600"
+                      size="sm"
+                    >
+                      Ajouter
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
         
-        <div className="text-center mt-8 sm:mt-10 md:mt-12">
-          <a href="/menu" className="inline-flex items-center text-primary font-semibold text-sm sm:text-base hover:underline">
-            {t('general.viewFullMenu')}
-            <svg className={`${isRTL ? 'mr-1 sm:mr-2 rotate-180' : 'ml-1 sm:ml-2'} h-3 w-3 sm:h-4 sm:w-4`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="text-center mt-12">
+          <a href="/menu" className="inline-flex items-center text-primary font-semibold hover:underline">
+            Voir Le Menu Complet
+            <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </a>

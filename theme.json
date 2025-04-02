@@ -1,6 +1,47 @@
 {
-  "variant": "vibrant",
-  "primary": "hsl(0, 80%, 45%)",
+  "name": "Abou Hilal Theme",
+  "primary": "#E20E0E",
+  "radius": 0.5,
   "appearance": "light",
-  "radius": 0.5
+  "accent": "#FFB800",
+  "borderRadius": "0.5rem",
+  "variant": "base",
+  "extend": {
+    "colors": {
+      "background": "#FFF8E8",
+      "foreground": "#111111",
+      "card": "#FFFFFF",
+      "card-foreground": "#111111",
+      "popover": "#FFFFFF",
+      "popover-foreground": "#111111",
+      
+      "primary": {
+        "DEFAULT": "#E20E0E",
+        "foreground": "#FFFFFF"
+      },
+      
+      "secondary": {
+        "DEFAULT": "#C94C00",
+        "foreground": "#FFFFFF"
+      },
+      
+      "accent": {
+        "DEFAULT": "#FFB800",
+        "foreground": "#111111"
+      },
+      
+      "orange": {
+        "DEFAULT": "#FF8800",
+        "foreground": "#FFFFFF"
+      },
+      
+      "destructive": {
+        "DEFAULT": "#DD0000",
+        "foreground": "#FFFFFF"
+      },
+      "border": "#F0E6D6",
+      "input": "#F0E6D6",
+      "ring": "#FFB800"
+    }
+  }
 }

@@ -11,7 +11,6 @@ import FullMenu from "@/pages/FullMenu";
 import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { useTranslation } from "react-i18next";
 
 function Router() {
   return (
