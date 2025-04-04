@@ -271,7 +271,7 @@ export default function FullMenu() {
                       <Button 
                         className="w-full" 
                         size="lg" 
-b                        onClick={() => {
+                        onClick={() => {
                           // Fermer le panier visible
                           setIsCartVisible(false);
                           
