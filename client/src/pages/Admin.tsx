@@ -221,39 +221,43 @@ export default function Admin() {
       });
     },
     // Actualiser automatiquement toutes les 5 secondes pour une mise à jour plus rapide
-    refetchInterval: 5000,
-    onSuccess: (data) => {
-      // Si c'est le premier chargement, juste enregistrer le nombre
-      if (lastOrderCount === 0) {
-        setLastOrderCount(data.length);
-        return;
-      }
-      
-      // Vérifier s'il y a de nouvelles commandes
-      if (data.length > lastOrderCount) {
-        // Identifier les nouvelles commandes
-        const sortedData = [...data].sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        
-        // Récupérer les IDs des nouvelles commandes (les n premières, où n est le nombre de nouvelles commandes)
-        const newOrdersCount = data.length - lastOrderCount;
-        const newIds = sortedData.slice(0, newOrdersCount).map(order => order.id);
-        
-        setNewOrderIds(newIds);
-        setHasNewOrders(true);
-        
-        // Notification pour nouvelles commandes
-        toast({
-          title: "Nouvelles commandes",
-          description: `${newOrdersCount} nouvelle(s) commande(s) reçue(s)`,
-          variant: "default",
-        });
-      }
-      
-      setLastOrderCount(data.length);
-    }
+    refetchInterval: 5000
   });
+
+  // Handle success callback separately
+  useEffect(() => {
+    if (!orders.length) return;
+    
+    // Si c'est le premier chargement, juste enregistrer le nombre
+    if (lastOrderCount === 0) {
+      setLastOrderCount(orders.length);
+      return;
+    }
+    
+    // Vérifier s'il y a de nouvelles commandes
+    if (orders.length > lastOrderCount) {
+      // Identifier les nouvelles commandes
+      const sortedData = [...orders].sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      // Récupérer les IDs des nouvelles commandes (les n premières, où n est le nombre de nouvelles commandes)
+      const newOrdersCount = orders.length - lastOrderCount;
+      const newIds = sortedData.slice(0, newOrdersCount).map(order => order.id);
+      
+      setNewOrderIds(newIds);
+      setHasNewOrders(true);
+      
+      // Notification pour nouvelles commandes
+      toast({
+        title: "Nouvelles commandes",
+        description: `${newOrdersCount} nouvelle(s) commande(s) reçue(s)`,
+        variant: "default",
+      });
+    }
+    
+    setLastOrderCount(orders.length);
+  }, [orders, lastOrderCount, toast]);
 
   // Trier les commandes par date (plus récentes en premier)
   const sortedOrders = [...orders].sort((a, b) => 

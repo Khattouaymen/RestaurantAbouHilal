@@ -291,8 +291,10 @@ export default function AdminMenu() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Catégorie</label>
+                <label htmlFor="category-select" className="block text-sm font-medium mb-1">Catégorie</label>
                 <select 
+                  id="category-select"
+                  aria-label="Sélectionner la catégorie"
                   className="w-full p-2 rounded border border-gray-300" 
                   value={editingItem?.categoryId || ''}
                   onChange={(e) => setEditingItem(prev => prev ? {...prev, categoryId: parseInt(e.target.value)} : null)}
@@ -314,8 +316,10 @@ export default function AdminMenu() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Plat vedette</label>
+              <label htmlFor="featured-select" className="block text-sm font-medium mb-1">Plat vedette</label>
               <select 
+                id="featured-select"
+                aria-label="Sélectionner si le plat est vedette"
                 className="w-full p-2 rounded border border-gray-300" 
                 value={editingItem?.featured || 0}
                 onChange={(e) => setEditingItem(prev => prev ? {...prev, featured: parseInt(e.target.value)} : null)}
@@ -326,11 +330,11 @@ export default function AdminMenu() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleCancelEdit} className="flex items-center gap-1">
+            <Button type="button" variant="outline" onClick={handleCancelEdit} className="flex items-center gap-1">
               <X size={16} />
               Annuler
             </Button>
-            <Button onClick={handleSaveItem} className="flex items-center gap-1">
+            <Button type="button" onClick={handleSaveItem} className="flex items-center gap-1">
               <Save size={16} />
               Enregistrer
             </Button>
@@ -382,6 +386,7 @@ export default function AdminMenu() {
                       </CardContent>
                       <CardFooter className="flex justify-end gap-2">
                         <Button 
+                          type="button"
                           size="sm" 
                           variant="outline" 
                           onClick={() => handleDeleteItem(item.id)}
@@ -391,6 +396,7 @@ export default function AdminMenu() {
                           Supprimer
                         </Button>
                         <Button 
+                          type="button"
                           size="sm" 
                           onClick={() => handleEditItem(item)}
                           className="flex items-center gap-1"

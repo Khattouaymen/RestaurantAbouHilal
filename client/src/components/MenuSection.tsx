@@ -282,6 +282,9 @@ export default function MenuSection({ menuItems, categories }: MenuSectionProps)
                       defaultValue="1"
                       className="w-12 p-1 border rounded text-center text-sm"
                       onChange={(e) => setQuantities(prev => ({ ...prev, [item.id]: parseInt(e.target.value) || 1 }))}
+                      aria-label={`Quantité pour ${item.name}`}
+                      title={`Quantité pour ${item.name}`}
+                      placeholder="1"
                     />
                     <Button 
                       onClick={() => handleAddToOrder(item)}

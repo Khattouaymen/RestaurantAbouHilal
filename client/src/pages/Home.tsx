@@ -10,23 +10,27 @@ import { useState, useEffect } from 'react';
 import OrderConfirmation from '@/components/OrderConfirmation';
 import { useQuery } from '@tanstack/react-query';
 import { useCart } from '@/hooks/useCart';
+import { MenuItem, Category } from '@shared/schema';
 
 export default function Home() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState('home');
   
-  const { data: menuItems = [] } = useQuery({
+  const { data: menuItems = [] } = useQuery<MenuItem[]>({
     queryKey: ['/api/menu-items'],
   });
 
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
   });
 
   const { items, clearCart } = useCart();
 
+  // Cette fonction ne sera plus utilisée directement par SimpleOrderForm
   const handleOrderSuccess = () => {
-    setShowConfirmation(true);
+    // Vous pourriez éventuellement jouer un son ou afficher une notification
+    // Mais ne pas ouvrir une nouvelle boîte de dialogue
+    // setShowConfirmation(true); // Commenter ou supprimer cette ligne
   };
 
   const handleCloseConfirmation = () => {

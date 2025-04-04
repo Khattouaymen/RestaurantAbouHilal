@@ -158,6 +158,7 @@ export default function Header({ activeSectionId, onNavClick }: HeaderProps) {
             </a>
             
             <button 
+              type="button"
               onClick={toggleMobileMenu}
               className="focus:outline-none text-white"
             >

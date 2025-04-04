@@ -37,7 +37,7 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
   const deliveryFee = calculateDeliveryFee();
   const total = calculateTotal();
   
-  // Form definition
+  // Convertir les nombres en chaînes pour les valeurs de formulaire
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,18 +52,18 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
       deliveryTime: "",
       paymentMethod: "credit-card",
       specialInstructions: "",
-      subtotal: subtotal,
-      deliveryFee: deliveryFee,
-      total: total
+      subtotal: subtotal.toString(), // Convertir en chaîne
+      deliveryFee: deliveryFee.toString(), // Convertir en chaîne
+      total: total.toString() // Convertir en chaîne
     },
   });
   
-  // Update totals when cart changes
+  // Mettre à jour les valeurs quand le panier change
   useEffect(() => {
-    form.setValue("subtotal", subtotal);
-    form.setValue("deliveryFee", deliveryFee);
-    form.setValue("total", total);
-  }, [items, subtotal, deliveryFee, total]);
+    form.setValue("subtotal", subtotal.toString()); // Convertir en chaîne
+    form.setValue("deliveryFee", deliveryFee.toString()); // Convertir en chaîne
+    form.setValue("total", total.toString()); // Convertir en chaîne
+  }, [subtotal, deliveryFee, total, form]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -346,6 +346,7 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
                             placeholder="Allergies, special requests, delivery instructions..." 
                             className="resize-none"
                             {...field}
+                            value={field.value || ''}
                           />
                         </FormControl>
                         <FormMessage />
@@ -393,6 +394,7 @@ export default function OrderSection({ onOrderSuccess }: OrderSectionProps) {
                         <div className="text-right">
                           <div className="font-bold">${(item.price * item.quantity).toFixed(2)}</div>
                           <button 
+                            type="button"
                             onClick={() => removeItem(item.id)}
                             className="text-red-500 text-sm flex items-center"
                           >

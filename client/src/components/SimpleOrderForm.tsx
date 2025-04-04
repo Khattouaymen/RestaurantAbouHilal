@@ -95,7 +95,7 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
         subtotal: calculateSubtotal().toString(),
         deliveryFee: DELIVERY_FEE.toString(),
         tax: calculateTax(TAX_RATE).toString(),
-        total: calculateTotal(TAX_RATE, DELIVERY_FEE).toString(),
+        total: calculateTotal().toString(),
         status: 'pending', // Default status for new orders
       };
 
@@ -127,8 +127,8 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
       
       // Show success toast
       toast({
-        title: "Order Placed Successfully!",
-        description: "Your delicious food is on its way.",
+        title: "Commande passée avec succès!",
+        description: "Votre délicieuse commande est en préparation.",
       });
       
       // Reset form
@@ -140,8 +140,10 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
         notes: '',
       });
       
-      // Trigger success callback
-      onOrderSuccess();
+      // NE PAS appeler onOrderSuccess ici
+      // Supprimez ou commentez cette ligne:
+      // onOrderSuccess();
+      
     } catch (error) {
       toast({
         title: "Error",
@@ -273,7 +275,7 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
                         
                         <div className="flex-1">
                           <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-gray-500">{item.description}</p>
+                          <p className="text-sm text-gray-500">{}</p>
                         </div>
                         
                         {/* Contrôles de quantité et prix (déjà bien positionnés) */}
@@ -293,6 +295,8 @@ export default function SimpleOrderForm({ onOrderSuccess }: OrderSectionProps) {
                               value={item.quantity}
                               onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
                               className="w-12 text-center border-x py-1"
+                              placeholder="Qty"
+                              title="Quantity"
                             />
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
